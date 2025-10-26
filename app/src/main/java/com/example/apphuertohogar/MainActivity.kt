@@ -56,7 +56,7 @@ class MainActivity : ComponentActivity(){
                         modifier = Modifier.padding(paddingValues = innerPadding)
                     ){
                         composable(route= Screen.Login.route){
-                            PlaceholderScreen(name="Login", viewModel= viewModel)
+                            com.example.apphuertohogar.ui.login.LoginScreen(mainViewModel = viewModel)
                         }
                         composable(route= Screen.Registro.route){
                             PlaceholderScreen(name="Registro",viewModel=viewModel)

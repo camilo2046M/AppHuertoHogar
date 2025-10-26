@@ -15,25 +15,21 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
-// Paleta de colores para Modo Oscuro (Dark Mode)
 private val DarkColorScheme = darkColorScheme(
     primary = Purple80,
     secondary = PurpleGrey80,
     tertiary = Pink80
 )
 
-// Paleta de colores para Modo Claro (Light Mode)
 private val LightColorScheme = lightColorScheme(
     primary = Purple40,
     secondary = PurpleGrey40,
     tertiary = Pink40
-    /* Otros colores por defecto van aquí */
 )
 
 @Composable
-fun AppHuertoHogarTheme( // <-- ¡ESTE ES EL TEMA QUE NO ENCUENTRA!
+fun AppHuertoHogarTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color (Android 12+)
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
