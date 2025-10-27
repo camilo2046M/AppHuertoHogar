@@ -20,6 +20,8 @@ import com.example.apphuertohogar.ui.theme.AppHuertoHogarTheme
 import com.example.apphuertohogar.viewmodel.MainViewModel
 import kotlinx.coroutines.flow.collectLatest
 import androidx.compose.ui.unit.dp
+import com.example.apphuertohogar.ui.registro.RegistroScreen
+import com.example.apphuertohogar.ui.home.HomeScreen
 
 
 class MainActivity : ComponentActivity(){
@@ -59,10 +61,10 @@ class MainActivity : ComponentActivity(){
                             com.example.apphuertohogar.ui.login.LoginScreen(mainViewModel = viewModel)
                         }
                         composable(route= Screen.Registro.route){
-                            PlaceholderScreen(name="Registro",viewModel=viewModel)
+                            com.example.apphuertohogar.ui.registro.RegistroScreen(mainViewModel= viewModel)
                         }
                         composable(route= Screen.Home.route){
-                            PlaceholderScreen(name="Home",viewModel=viewModel)
+                            com.example.apphuertohogar.ui.home.HomeScreen(mainViewModel = viewModel)
                         }
                         composable(route= Screen.Perfil.route){
                             PlaceholderScreen(name="Perfil",viewModel=viewModel)

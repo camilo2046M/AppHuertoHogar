@@ -1,0 +1,109 @@
+package com.example.apphuertohogar.ui.home
+
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.apphuertohogar.model.Producto
+import com.example.apphuertohogar.viewmodel.HomeViewModel
+import com.example.apphuertohogar.viewmodel.MainViewModel
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun HomeScreen(
+    mainViewModel: MainViewModel,
+    homeViewModel: HomeViewModel = viewModel()
+) {
+    val uiState by homeViewModel.uiState.collectAsState()
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("HuertoHogar") },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.primary
+                )
+            )
+        }
+    ) { innerPadding ->
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(16.dp), // Padding general
+            contentAlignment = Alignment.Center
+        ) {
+            if (uiState.isLoading) {
+                CircularProgressIndicator()
+            }
+            else {
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    item {
+                        Text(
+                            "Nuestros Productos",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    items(uiState.productos) { producto ->
+                        ProductoCard(producto = producto, onAddToCart = {
+                            // TODO: Lógica para agregar al carrito
+                        })
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+@Composable
+fun ProductoCard(
+    producto: Producto,
+    onAddToCart: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(producto.nombre, style = MaterialTheme.typography.titleLarge)
+                Text(producto.descripcion, style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    text = "$${producto.precio}",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
+            // TODO: Aquí iría la imagen del producto
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Button(onClick = onAddToCart) {
+                Text("Agregar")
+            }
+        }
+    }
+}
