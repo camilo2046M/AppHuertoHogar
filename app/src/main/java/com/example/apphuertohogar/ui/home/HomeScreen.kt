@@ -15,12 +15,15 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.apphuertohogar.model.Producto
 import com.example.apphuertohogar.viewmodel.HomeViewModel
 import com.example.apphuertohogar.viewmodel.MainViewModel
-
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
+import com.example.apphuertohogar.viewmodel.CartViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     mainViewModel: MainViewModel,
-    homeViewModel: HomeViewModel = viewModel()
+    homeViewModel: HomeViewModel = viewModel(),
+    cartViewModel: CartViewModel
 ) {
     val uiState by homeViewModel.uiState.collectAsState()
 
@@ -59,7 +62,7 @@ fun HomeScreen(
                     }
 
                     items(uiState.productos) { producto ->
-                        ProductoCard(producto = producto, onAddToCart = {
+                        ProductoCard(producto = producto,cartViewModel= cartViewModel, onAddToCart = {
                             // TODO: Lógica para agregar al carrito
                         })
                     }
@@ -73,6 +76,7 @@ fun HomeScreen(
 @Composable
 fun ProductoCard(
     producto: Producto,
+    cartViewModel: CartViewModel,
     onAddToCart: () -> Unit
 ) {
     Card(
@@ -83,9 +87,18 @@ fun ProductoCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            verticalAlignment = Alignment.CenterVertically
         ) {
+            AsyncImage(
+                model = producto.imagenUrl,
+                contentDescription = producto.nombre,
+                modifier = Modifier
+                    .size(80.dp)
+                    .padding(end = 16.dp),
+                contentScale = ContentScale.Crop
+            )
+
+            // --- Text Content ---
             Column(modifier = Modifier.weight(1f)) {
                 Text(producto.nombre, style = MaterialTheme.typography.titleLarge)
                 Text(producto.descripcion, style = MaterialTheme.typography.bodyMedium)
@@ -97,11 +110,8 @@ fun ProductoCard(
                     modifier = Modifier.padding(top = 8.dp)
                 )
             }
-            // TODO: Aquí iría la imagen del producto
 
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Button(onClick = onAddToCart) {
+            Button(onClick = {cartViewModel.addToCart(producto)}) {
                 Text("Agregar")
             }
         }

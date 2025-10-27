@@ -22,8 +22,7 @@ import kotlinx.coroutines.flow.collectLatest
 import androidx.compose.ui.unit.dp
 import com.example.apphuertohogar.ui.registro.RegistroScreen
 import com.example.apphuertohogar.ui.home.HomeScreen
-
-
+import com.example.apphuertohogar.viewmodel.CartViewModel
 class MainActivity : ComponentActivity(){
     override fun onCreate(savedInstanceState: Bundle?){
         super.onCreate(savedInstanceState)
@@ -31,6 +30,7 @@ class MainActivity : ComponentActivity(){
             AppHuertoHogarTheme {
                 val navController = rememberNavController()
                 val viewModel: MainViewModel = viewModel()
+                val cartViewModel: CartViewModel = viewModel()
 
 
                 LaunchedEffect(Unit) {
@@ -64,7 +64,7 @@ class MainActivity : ComponentActivity(){
                             com.example.apphuertohogar.ui.registro.RegistroScreen(mainViewModel= viewModel)
                         }
                         composable(route= Screen.Home.route){
-                            com.example.apphuertohogar.ui.home.HomeScreen(mainViewModel = viewModel)
+                            com.example.apphuertohogar.ui.home.HomeScreen(mainViewModel = viewModel, cartViewModel=cartViewModel)
                         }
                         composable(route= Screen.Perfil.route){
                             PlaceholderScreen(name="Perfil",viewModel=viewModel)
