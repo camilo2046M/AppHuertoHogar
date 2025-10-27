@@ -18,6 +18,9 @@ import com.example.apphuertohogar.viewmodel.MainViewModel
 import coil.compose.AsyncImage
 import androidx.compose.ui.layout.ContentScale
 import com.example.apphuertohogar.viewmodel.CartViewModel
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ShoppingCart
+import com.example.apphuertohogar.navigation.Screen
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
@@ -31,10 +34,15 @@ fun HomeScreen(
         topBar = {
             TopAppBar(
                 title = { Text("HuertoHogar") },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.primary
-                )
+                colors = TopAppBarDefaults.topAppBarColors( ),
+                actions = {
+                    IconButton(onClick = { mainViewModel.navigateTo(Screen.Carrito) }) {
+                        Icon(
+                            imageVector = Icons.Filled.ShoppingCart,
+                            contentDescription = "Carrito de Compras"
+                        )
+                    }
+                }
             )
         }
     ) { innerPadding ->

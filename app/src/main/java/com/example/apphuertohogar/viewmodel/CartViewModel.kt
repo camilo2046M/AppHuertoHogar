@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.update
 class CartViewModel : ViewModel() {
 
     private val _cartItems= MutableStateFlow<List<CartItem>>(emptyList())
-    val cartItem : StateFlow<List<CartItem>> = _cartItems.asStateFlow()
+    val cartItems : StateFlow<List<CartItem>> = _cartItems.asStateFlow()
 
     fun addToCart(producto: Producto){
         _cartItems.update { currentItems ->
@@ -31,4 +31,29 @@ class CartViewModel : ViewModel() {
         }
     }
 
+    fun removeFromCart(productoId: Int) {
+        _cartItems.update { currentItems ->
+            currentItems.filterNot { it.producto.id == productoId }
+        }
+        // TODO: Update persistent storage
+    }
+
+    fun updateQuantity(productoId: Int, change: Int) {
+        _cartItems.update { currentItems ->
+            currentItems.mapNotNull { item ->
+                if (item.producto.id == productoId) {
+                    val newQuantity = item.cantidad + change
+                    if (newQuantity > 0) {
+                        item.copy(cantidad = newQuantity)
+                    } else {
+                        null
+                    }
+                } else {
+                    item
+                }
+            }
+        }
+        // TODO: Update persistent storage
+    }
 }
+

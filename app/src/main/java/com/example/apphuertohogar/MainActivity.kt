@@ -29,6 +29,7 @@ class MainActivity : ComponentActivity(){
         setContent{
             AppHuertoHogarTheme {
                 val navController = rememberNavController()
+                val mainViewModel: MainViewModel = viewModel()
                 val viewModel: MainViewModel = viewModel()
                 val cartViewModel: CartViewModel = viewModel()
 
@@ -70,7 +71,10 @@ class MainActivity : ComponentActivity(){
                             PlaceholderScreen(name="Perfil",viewModel=viewModel)
                         }
                         composable(route=Screen.Carrito.route){
-                            PlaceholderScreen(name="Carrito", viewModel=viewModel)
+                            com.example.apphuertohogar.ui.cart.CartScreen(
+                                mainViewModel = mainViewModel,
+                                cartViewModel = cartViewModel
+                            )
                         }
                         composable(route= Screen.Checkout.route){
                             PlaceholderScreen(name="Checkout",viewModel=viewModel)
