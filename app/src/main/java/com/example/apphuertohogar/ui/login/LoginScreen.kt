@@ -61,7 +61,9 @@ fun LoginScreen(
         Button(
             onClick = {
                 loginViewModel.iniciarSesion(
-                    onSuccess = { userId ->
+                    onSuccess = { usuarioId ->
+                        println("Inicio de sesión exitoso!!")
+                        mainViewModel.setLoggedInUser(usuarioId)
                         mainViewModel.navigateTo(Screen.Home)
                     },
                     onFailure = { errorMessage ->
