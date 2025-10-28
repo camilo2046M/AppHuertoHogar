@@ -16,7 +16,7 @@ import androidx.lifecycle.ViewModel
 
 class RegistroViewModel(application: Application) : AndroidViewModel(application){
 
-    private val userDao: UsuarioDao = AppDatabase.getDatabase(application).usuarioDao()
+    private val usuarioDao: UsuarioDao = AppDatabase.getDatabase(application).usuarioDao()
     private val _uiState = MutableStateFlow(RegistroUiState())
     val uiState: StateFlow <RegistroUiState> = _uiState.asStateFlow()
 
@@ -67,17 +67,17 @@ class RegistroViewModel(application: Application) : AndroidViewModel(application
         return esValido
     }
 
-    fun registrarUsuario(onSuccess: () -> Unit, onFailure: (String) -> Unit) {
+    fun registrarUsuario(onSuccess: (newUsuarioId: Int) -> Unit, onFailure: (String) -> Unit) {
         if (validarFormulario()) {
             viewModelScope.launch {
                 try {
-                    val newUser = Usuario(
+                    val newUsuario = Usuario(
                         nombre = _uiState.value.nombre,
                         email = _uiState.value.email,
                         passHash = _uiState.value.pass
                     )
-                    userDao.insertartUsuario(newUser)
-                    onSuccess()
+                    val newUsuarioId = usuarioDao.insertarUsuario(newUsuario)
+                    onSuccess(newUsuarioId.toInt())
                 } catch (e: Exception) {
                     onFailure("Error al registrar: ${e.message}")
                 }

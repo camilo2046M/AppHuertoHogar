@@ -12,8 +12,7 @@ import kotlinx.coroutines.flow.Flow
 interface UsuarioDao{
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
-    suspend fun insertartUsuario(user: Usuario)
-
+    suspend fun insertarUsuario(user: Usuario): Long
     @Query("SELECT * FROM usuarios WHERE email = :email LIMIT 1")
     suspend fun getUserByEmail(email: String): Usuario?
 

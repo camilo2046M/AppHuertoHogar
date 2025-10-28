@@ -77,11 +77,11 @@ fun RegistroScreen(
         Button(
             onClick = {
                 registroViewModel.registrarUsuario(
-                    onSuccess = {
+                    onSuccess = { newUsuarioId -> //
+                        mainViewModel.setLoggedInUser(newUsuarioId)
                         mainViewModel.navigateTo(Screen.Home)
                     },
                     onFailure = { errorMessage ->
-                        // TODO: Show an error message to the user (e.g., using a Snackbar or Toast)
                         println("Error de registro: $errorMessage")
                     }
                 )
