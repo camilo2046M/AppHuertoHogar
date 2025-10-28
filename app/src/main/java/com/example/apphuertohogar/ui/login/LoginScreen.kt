@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.apphuertohogar.navigation.NavigationEvent
 import com.example.apphuertohogar.navigation.Screen
 import com.example.apphuertohogar.viewmodel.LoginViewModel
 import com.example.apphuertohogar.viewmodel.MainViewModel
@@ -64,7 +65,14 @@ fun LoginScreen(
                     onSuccess = { usuarioId ->
                         println("Inicio de sesión exitoso!!")
                         mainViewModel.setLoggedInUser(usuarioId)
-                        mainViewModel.navigateTo(Screen.Home)
+                        mainViewModel.navigateTo(
+                            NavigationEvent.NavigateTo(
+                                route = Screen.Home,
+                                popUpToRoute = Screen.Login, // Pop back up to Login screen
+                                inclusive = true,            // Remove Login screen itself
+                                singleTop = true             // Avoid multiple Home instances
+                            )
+                        )
                     },
                     onFailure = { errorMessage ->
                         println("Error de login: $errorMessage")
@@ -78,7 +86,9 @@ fun LoginScreen(
 
         TextButton(
             onClick = {
-                mainViewModel.navigateTo(Screen.Registro)
+                mainViewModel.navigateTo(
+                    NavigationEvent.NavigateTo(route = Screen.Registro)
+                )
             }
         ) {
             Text("¿No tienes cuenta? Regístrate")

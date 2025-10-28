@@ -43,6 +43,7 @@ android {
 
 dependencies {
 
+    implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.compose.material.icons.extended.android)
     implementation( libs.coil.compose)
     val room_version = "2.6.1"

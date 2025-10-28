@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.apphuertohogar.navigation.NavigationEvent
 import com.example.apphuertohogar.navigation.Screen
 import com.example.apphuertohogar.viewmodel.MainViewModel
 import com.example.apphuertohogar.viewmodel.RegistroViewModel
@@ -79,7 +80,14 @@ fun RegistroScreen(
                 registroViewModel.registrarUsuario(
                     onSuccess = { newUsuarioId -> //
                         mainViewModel.setLoggedInUser(newUsuarioId)
-                        mainViewModel.navigateTo(Screen.Home)
+                        mainViewModel.navigateTo(
+                            NavigationEvent.NavigateTo(
+                                route = Screen.Home,
+                                popUpToRoute = Screen.Login, // Pop back up to Login screen (start destination)
+                                inclusive = true,            // Remove Login/Register screens
+                                singleTop = true             // Avoid multiple Home instances
+                            )
+                        )
                     },
                     onFailure = { errorMessage ->
                         println("Error de registro: $errorMessage")

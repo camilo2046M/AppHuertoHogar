@@ -23,6 +23,13 @@ import androidx.compose.ui.unit.dp
 import com.example.apphuertohogar.ui.registro.RegistroScreen
 import com.example.apphuertohogar.ui.home.HomeScreen
 import com.example.apphuertohogar.viewmodel.CartViewModel
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.ui.Alignment
+import kotlinx.coroutines.flow.first
+import androidx.compose.foundation.layout.fillMaxSize
+
 class MainActivity : ComponentActivity(){
     override fun onCreate(savedInstanceState: Bundle?){
         super.onCreate(savedInstanceState)
@@ -33,14 +40,24 @@ class MainActivity : ComponentActivity(){
                 val viewModel: MainViewModel = viewModel()
                 val cartViewModel: CartViewModel = viewModel()
 
+                val startDestination by produceState<String?>(initialValue = null) {
+                    val initialUserId = mainViewModel.loggedInUserId.first()
+                    value = if (initialUserId != null) {
+                        Screen.Home.route
+                    } else {
+                        Screen.Login.route
+                    }
+                    println(">>> Determined startDestination: $value")
+                }
+
 
                 LaunchedEffect(Unit) {
-                    viewModel.navigationEvents.collectLatest { event ->
-                        when (event){
+                    mainViewModel.navigationEvents.collectLatest { event ->
+                        when (event) {
                             is NavigationEvent.NavigateTo -> {
-                                navController.navigate(route = event.route.route){
-                                    event.popUpToRoute?.let {
-                                        popUpTo(route=it.route){
+                                navController.navigate(route = event.route.route) {
+                                    event.popUpToRoute?.let { popUpScreen ->
+                                        popUpTo(popUpScreen.route) {
                                             inclusive = event.inclusive
                                         }
                                     }
@@ -53,11 +70,19 @@ class MainActivity : ComponentActivity(){
                     }
                 }
                 Scaffold { innerPadding ->
-                    NavHost(
-                        navController=navController,
-                        startDestination = Screen.Login.route,
-                        modifier = Modifier.padding(paddingValues = innerPadding)
-                    ){
+                    if (startDestination == null) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    } else {
+                        NavHost(
+                            navController = navController,
+                            startDestination = startDestination!!,
+                            modifier = Modifier.padding(paddingValues = innerPadding)
+                        ) {
                         composable(route= Screen.Login.route){
                             com.example.apphuertohogar.ui.login.LoginScreen(mainViewModel = viewModel)
                         }
@@ -95,5 +120,6 @@ class MainActivity : ComponentActivity(){
 fun PlaceholderScreen(name:String,viewModel: MainViewModel){
     Box(modifier = Modifier.padding(16.dp)){
         Text(text = "Estás en la pantalla: $name")
+        }
     }
 }
