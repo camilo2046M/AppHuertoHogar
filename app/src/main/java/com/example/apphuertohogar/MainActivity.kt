@@ -20,72 +20,26 @@ import com.example.apphuertohogar.ui.theme.AppHuertoHogarTheme
 import com.example.apphuertohogar.viewmodel.MainViewModel
 import kotlinx.coroutines.flow.collectLatest
 import androidx.compose.ui.unit.dp
+import com.example.apphuertohogar.navigation.AppNavigation
 
 
 class MainActivity : ComponentActivity(){
-    override fun onCreate(savedInstanceState: Bundle?){
+    override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent{
+        setContent {
             AppHuertoHogarTheme {
                 val navController = rememberNavController()
                 val viewModel: MainViewModel = viewModel()
+                AppNavigation()
 
+            }
 
-                LaunchedEffect(Unit) {
-                    viewModel.navigationEvents.collectLatest { event ->
-                        when (event){
-                            is NavigationEvent.NavigateTo -> {
-                                navController.navigate(route = event.route.route){
-                                    event.popUpToRoute?.let {
-                                        popUpTo(route=it.route){
-                                            inclusive = event.inclusive
-                                        }
-                                    }
-                                    launchSingleTop = event.singleTop
-                                }
-                            }
-                            is NavigationEvent.PopBackStack -> navController.popBackStack()
-                            is NavigationEvent.NavigateUp -> navController.navigateUp()
-                        }
-                    }
-                }
-                Scaffold { innerPadding ->
-                    NavHost(
-                        navController=navController,
-                        startDestination = Screen.Login.route,
-                        modifier = Modifier.padding(paddingValues = innerPadding)
-                    ){
-                        composable(route= Screen.Login.route){
-                            PlaceholderScreen(name="Login", viewModel= viewModel)
-                        }
-                        composable(route= Screen.Registro.route){
-                            PlaceholderScreen(name="Registro",viewModel=viewModel)
-                        }
-                        composable(route= Screen.Home.route){
-                            PlaceholderScreen(name="Home",viewModel=viewModel)
-                        }
-                        composable(route= Screen.Perfil.route){
-                            PlaceholderScreen(name="Perfil",viewModel=viewModel)
-                        }
-                        composable(route=Screen.Carrito.route){
-                            PlaceholderScreen(name="Carrito", viewModel=viewModel)
-                        }
-                        composable(route= Screen.Checkout.route){
-                            PlaceholderScreen(name="Checkout",viewModel=viewModel)
-                        }
-
-
-
-                    }
+            @Composable
+            fun PlaceholderScreen(name: String, viewModel: MainViewModel) {
+                Box(modifier = Modifier.padding(16.dp)) {
+                    Text(text = "Estás en la pantalla: $name")
                 }
             }
         }
-    }
-}
-
-@Composable
-fun PlaceholderScreen(name:String,viewModel: MainViewModel){
-    Box(modifier = Modifier.padding(16.dp)){
-        Text(text = "Estás en la pantalla: $name")
     }
 }
