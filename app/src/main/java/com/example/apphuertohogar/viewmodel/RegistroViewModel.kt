@@ -1,14 +1,22 @@
 package com.example.apphuertohogar.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.apphuertohogar.data.AppDatabase
+import com.example.apphuertohogar.data.UsuarioDao
 import com.example.apphuertohogar.model.RegistroUiState
-import kotlinx.coroutines.flow.StateFlow
+import com.example.apphuertohogar.model.Usuario
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import androidx.lifecycle.ViewModel
 
-class RegistroViewModel : ViewModel(){
+class RegistroViewModel(application: Application) : AndroidViewModel(application){
 
+    private val userDao: UsuarioDao = AppDatabase.getDatabase(application).usuarioDao()
     private val _uiState = MutableStateFlow(RegistroUiState())
     val uiState: StateFlow <RegistroUiState> = _uiState.asStateFlow()
 
@@ -58,4 +66,25 @@ class RegistroViewModel : ViewModel(){
 
         return esValido
     }
+
+    fun registrarUsuario(onSuccess: () -> Unit, onFailure: (String) -> Unit) {
+        if (validarFormulario()) {
+            viewModelScope.launch {
+                try {
+                    val newUser = Usuario(
+                        nombre = _uiState.value.nombre,
+                        email = _uiState.value.email,
+                        passHash = _uiState.value.pass
+                    )
+                    userDao.insertartUsuario(newUser)
+                    onSuccess()
+                } catch (e: Exception) {
+                    onFailure("Error al registrar: ${e.message}")
+                }
+            }
+        } else {
+            onFailure("Formulario inválido")
+        }
+    }
 }
+

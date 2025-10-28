@@ -67,8 +67,10 @@ class MainActivity : ComponentActivity(){
                         composable(route= Screen.Home.route){
                             com.example.apphuertohogar.ui.home.HomeScreen(mainViewModel = viewModel, cartViewModel=cartViewModel)
                         }
-                        composable(route= Screen.Perfil.route){
-                            PlaceholderScreen(name="Perfil",viewModel=viewModel)
+                        composable(route = Screen.Perfil.route) {
+                            com.example.apphuertohogar.ui.perfil.ProfileScreen(
+                                mainViewModel = mainViewModel
+                            )
                         }
                         composable(route=Screen.Carrito.route){
                             com.example.apphuertohogar.ui.cart.CartScreen(
