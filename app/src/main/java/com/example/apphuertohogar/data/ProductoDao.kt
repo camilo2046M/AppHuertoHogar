@@ -8,6 +8,7 @@ import com.example.apphuertohogar.model.Producto
 import kotlinx.coroutines.flow.Flow
 
 
+
 @Dao
 interface ProductoDao{
 
@@ -19,4 +20,8 @@ interface ProductoDao{
 
     @Query("SELECT * FROM productos WHERE categoria = :categoria ORDER BY nombre ASC")
     fun obtenerPorCategoria(categoria: String): Flow <List<Producto>>
+
+    @Query("SELECT COUNT(*) FROM productos")
+    suspend fun contarProductos(): Int
+
 }

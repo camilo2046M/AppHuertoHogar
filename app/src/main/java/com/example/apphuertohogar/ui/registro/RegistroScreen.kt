@@ -76,9 +76,15 @@ fun RegistroScreen(
 
         Button(
             onClick = {
-                if (registroViewModel.validarFormulario()) {
-                    mainViewModel.navigateTo(Screen.Home)
-                }
+                registroViewModel.registrarUsuario(
+                    onSuccess = {
+                        mainViewModel.navigateTo(Screen.Home)
+                    },
+                    onFailure = { errorMessage ->
+                        // TODO: Show an error message to the user (e.g., using a Snackbar or Toast)
+                        println("Error de registro: $errorMessage")
+                    }
+                )
             },
             modifier = Modifier.fillMaxWidth()
         ) {

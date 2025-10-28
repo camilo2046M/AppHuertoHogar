@@ -60,9 +60,14 @@ fun LoginScreen(
 
         Button(
             onClick = {
-                if (loginViewModel.validarFormulario()) {
-                    mainViewModel.navigateTo(Screen.Home)
-                }
+                loginViewModel.iniciarSesion(
+                    onSuccess = { userId ->
+                        mainViewModel.navigateTo(Screen.Home)
+                    },
+                    onFailure = { errorMessage ->
+                        println("Error de login: $errorMessage")
+                    }
+                )
             },
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -77,4 +82,6 @@ fun LoginScreen(
             Text("¿No tienes cuenta? Regístrate")
         }
     }
+
+
 }

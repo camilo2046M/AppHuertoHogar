@@ -43,6 +43,8 @@ android {
 
 dependencies {
 
+    implementation(libs.androidx.compose.material.icons.extended.android)
+    implementation( libs.coil.compose)
     val room_version = "2.6.1"
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)

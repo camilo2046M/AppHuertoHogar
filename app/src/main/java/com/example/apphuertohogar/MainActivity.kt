@@ -22,15 +22,16 @@ import kotlinx.coroutines.flow.collectLatest
 import androidx.compose.ui.unit.dp
 import com.example.apphuertohogar.ui.registro.RegistroScreen
 import com.example.apphuertohogar.ui.home.HomeScreen
-
-
+import com.example.apphuertohogar.viewmodel.CartViewModel
 class MainActivity : ComponentActivity(){
     override fun onCreate(savedInstanceState: Bundle?){
         super.onCreate(savedInstanceState)
         setContent{
             AppHuertoHogarTheme {
                 val navController = rememberNavController()
+                val mainViewModel: MainViewModel = viewModel()
                 val viewModel: MainViewModel = viewModel()
+                val cartViewModel: CartViewModel = viewModel()
 
 
                 LaunchedEffect(Unit) {
@@ -64,13 +65,18 @@ class MainActivity : ComponentActivity(){
                             com.example.apphuertohogar.ui.registro.RegistroScreen(mainViewModel= viewModel)
                         }
                         composable(route= Screen.Home.route){
-                            com.example.apphuertohogar.ui.home.HomeScreen(mainViewModel = viewModel)
+                            com.example.apphuertohogar.ui.home.HomeScreen(mainViewModel = viewModel, cartViewModel=cartViewModel)
                         }
-                        composable(route= Screen.Perfil.route){
-                            PlaceholderScreen(name="Perfil",viewModel=viewModel)
+                        composable(route = Screen.Perfil.route) {
+                            com.example.apphuertohogar.ui.perfil.ProfileScreen(
+                                mainViewModel = mainViewModel
+                            )
                         }
                         composable(route=Screen.Carrito.route){
-                            PlaceholderScreen(name="Carrito", viewModel=viewModel)
+                            com.example.apphuertohogar.ui.cart.CartScreen(
+                                mainViewModel = mainViewModel,
+                                cartViewModel = cartViewModel
+                            )
                         }
                         composable(route= Screen.Checkout.route){
                             PlaceholderScreen(name="Checkout",viewModel=viewModel)

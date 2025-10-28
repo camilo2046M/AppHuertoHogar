@@ -15,12 +15,19 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.apphuertohogar.model.Producto
 import com.example.apphuertohogar.viewmodel.HomeViewModel
 import com.example.apphuertohogar.viewmodel.MainViewModel
-
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
+import com.example.apphuertohogar.viewmodel.CartViewModel
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ShoppingCart
+import com.example.apphuertohogar.navigation.Screen
+import androidx.compose.material.icons.filled.Person
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     mainViewModel: MainViewModel,
-    homeViewModel: HomeViewModel = viewModel()
+    homeViewModel: HomeViewModel = viewModel(),
+    cartViewModel: CartViewModel
 ) {
     val uiState by homeViewModel.uiState.collectAsState()
 
@@ -28,10 +35,21 @@ fun HomeScreen(
         topBar = {
             TopAppBar(
                 title = { Text("HuertoHogar") },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.primary
-                )
+                colors = TopAppBarDefaults.topAppBarColors( /* ... */ ),
+                actions = {
+                    IconButton(onClick = { mainViewModel.navigateTo(Screen.Carrito) }) {
+                        Icon(
+                            imageVector = Icons.Filled.ShoppingCart,
+                            contentDescription = "Carrito de Compras"
+                        )
+                    }
+                    IconButton(onClick = { mainViewModel.navigateTo(Screen.Perfil) }) {
+                        Icon(
+                            imageVector = Icons.Filled.Person,
+                            contentDescription = "Mi Perfil"
+                        )
+                    }
+                }
             )
         }
     ) { innerPadding ->
@@ -40,7 +58,7 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(16.dp), // Padding general
+                .padding(16.dp),
             contentAlignment = Alignment.Center
         ) {
             if (uiState.isLoading) {
@@ -59,7 +77,7 @@ fun HomeScreen(
                     }
 
                     items(uiState.productos) { producto ->
-                        ProductoCard(producto = producto, onAddToCart = {
+                        ProductoCard(producto = producto,cartViewModel= cartViewModel, onAddToCart = {
                             // TODO: Lógica para agregar al carrito
                         })
                     }
@@ -73,6 +91,7 @@ fun HomeScreen(
 @Composable
 fun ProductoCard(
     producto: Producto,
+    cartViewModel: CartViewModel,
     onAddToCart: () -> Unit
 ) {
     Card(
@@ -83,9 +102,18 @@ fun ProductoCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            verticalAlignment = Alignment.CenterVertically
         ) {
+            AsyncImage(
+                model = producto.imagenUrl,
+                contentDescription = producto.nombre,
+                modifier = Modifier
+                    .size(80.dp)
+                    .padding(end = 16.dp),
+                contentScale = ContentScale.Crop
+            )
+
+            // --- Text Content ---
             Column(modifier = Modifier.weight(1f)) {
                 Text(producto.nombre, style = MaterialTheme.typography.titleLarge)
                 Text(producto.descripcion, style = MaterialTheme.typography.bodyMedium)
@@ -97,11 +125,8 @@ fun ProductoCard(
                     modifier = Modifier.padding(top = 8.dp)
                 )
             }
-            // TODO: Aquí iría la imagen del producto
 
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Button(onClick = onAddToCart) {
+            Button(onClick = {cartViewModel.addToCart(producto)}) {
                 Text("Agregar")
             }
         }
