@@ -22,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ShoppingCart
 import com.example.apphuertohogar.navigation.Screen
 import androidx.compose.material.icons.filled.Person
+import com.example.apphuertohogar.navigation.NavigationEvent
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
@@ -37,13 +38,13 @@ fun HomeScreen(
                 title = { Text("HuertoHogar") },
                 colors = TopAppBarDefaults.topAppBarColors( /* ... */ ),
                 actions = {
-                    IconButton(onClick = { mainViewModel.navigateTo(Screen.Carrito) }) {
+                    IconButton(onClick = { mainViewModel.navigateTo(NavigationEvent.NavigateTo(route = Screen.Carrito)) }) {
                         Icon(
                             imageVector = Icons.Filled.ShoppingCart,
                             contentDescription = "Carrito de Compras"
                         )
                     }
-                    IconButton(onClick = { mainViewModel.navigateTo(Screen.Perfil) }) {
+                    IconButton(onClick = { mainViewModel.navigateTo(NavigationEvent.NavigateTo(route = Screen.Perfil)) }) {
                         Icon(
                             imageVector = Icons.Filled.Person,
                             contentDescription = "Mi Perfil"

@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.TextButton
+import com.example.apphuertohogar.navigation.NavigationEvent
 
 
 
@@ -86,7 +87,7 @@ fun CartScreen(
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold
                     )
-                    Button(onClick = { mainViewModel.navigateTo(Screen.Checkout) }) {
+                    Button(onClick = { mainViewModel.navigateTo(NavigationEvent.NavigateTo(route = Screen.Checkout)) }) {
                         Text("Finalizar Compra")
                     }
                 }

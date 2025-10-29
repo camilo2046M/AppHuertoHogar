@@ -1,6 +1,9 @@
 package com.example.apphuertohogar.viewmodel
 
 import android.app.Application
+import android.content.Context
+import android.net.Uri
+import androidx.core.content.FileProvider
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.apphuertohogar.data.AppDatabase
@@ -12,12 +15,35 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.example.apphuertohogar.model.Usuario
+import java.io.File
+
 class PerfilViewModel(application: Application): AndroidViewModel(application) {
 
     private val usuarioDao: UsuarioDao = AppDatabase.getDatabase(application).usuarioDao()
+    private val appContext = application.applicationContext
 
     private val _uiState = MutableStateFlow(PerfilUiState())
     val uiState: StateFlow<PerfilUiState> = _uiState.asStateFlow()
+
+    private val _imageUri = MutableStateFlow<Uri?>(null)
+    val imageUri: StateFlow<Uri?> = _imageUri.asStateFlow()
+
+    fun updateImageUri(uri: Uri?) {
+        println(">>> PerfilViewModel: Updating imageUri to: $uri") // <-- ADD LOG
+        _imageUri.value = uri
+    }
+
+    fun getTmpUri(): Uri {
+        val cacheDir = appContext.cacheDir
+        val imageDir = File(cacheDir, "images").apply { mkdirs() }
+        val tmpFile = File.createTempFile("profile_pic", ".png", imageDir).apply {
+            createNewFile()
+            deleteOnExit()
+        }
+        val authority = "${appContext.packageName}.provider"
+        return FileProvider.getUriForFile(appContext, authority, tmpFile)
+    }
+
 
     fun loadUserProfile(usuarioId: Int?) {
         if (usuarioId == null) {
