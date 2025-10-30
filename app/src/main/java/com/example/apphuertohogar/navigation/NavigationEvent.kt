@@ -6,7 +6,8 @@ sealed class NavigationEvent {
         val route: Screen,
         val popUpToRoute: Screen?= null,
         val inclusive: Boolean = false,
-        val singleTop: Boolean = false
+        val singleTop: Boolean = false,
+        val productoId: Int? = null
     ) : NavigationEvent()
 
     data object PopBackStack: NavigationEvent()

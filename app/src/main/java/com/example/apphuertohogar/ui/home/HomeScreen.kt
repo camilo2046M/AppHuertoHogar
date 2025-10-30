@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.ShoppingCart
 import com.example.apphuertohogar.navigation.Screen
 import androidx.compose.material.icons.filled.Person
 import com.example.apphuertohogar.navigation.NavigationEvent
+import androidx.compose.foundation.clickable
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
@@ -78,9 +79,19 @@ fun HomeScreen(
                     }
 
                     items(uiState.productos) { producto ->
-                        ProductoCard(producto = producto,cartViewModel= cartViewModel, onAddToCart = {
-                            // TODO: Lógica para agregar al carrito
-                        })
+                        ProductoCard(
+                            producto = producto,
+                            cartViewModel = cartViewModel,
+                            // MODIFICA onAddToCart por onCardClick
+                            onCardClick = {
+                                mainViewModel.navigateTo(
+                                    NavigationEvent.NavigateTo(
+                                        route = Screen.DetalleProducto,
+                                        productoId = producto.id
+                                    )
+                                )
+                            }
+                        )
                     }
                 }
             }
@@ -93,10 +104,12 @@ fun HomeScreen(
 fun ProductoCard(
     producto: Producto,
     cartViewModel: CartViewModel,
-    onAddToCart: () -> Unit
+    onCardClick: () -> Unit
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onCardClick() },
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Row(
