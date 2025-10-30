@@ -29,7 +29,9 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.ui.Alignment
 import kotlinx.coroutines.flow.first
 import androidx.compose.foundation.layout.fillMaxSize
-
+import androidx.navigation.navArgument
+import com.example.apphuertohogar.ui.detalleproducto.DetalleProductoScreen
+import androidx.navigation.NavType
 class MainActivity : ComponentActivity(){
     override fun onCreate(savedInstanceState: Bundle?){
         super.onCreate(savedInstanceState)
@@ -55,7 +57,23 @@ class MainActivity : ComponentActivity(){
                     mainViewModel.navigationEvents.collectLatest { event ->
                         when (event) {
                             is NavigationEvent.NavigateTo -> {
-                                navController.navigate(route = event.route.route) {
+
+                                // --- INICIO: LÓGICA MODIFICADA ---
+                                val finalRoute: String
+                                if (event.productoId != null) {
+                                    // Construye la ruta dinámica: ej. "detalle_producto/5"
+                                    finalRoute = event.route.route.replace(
+                                        "{productoId}",
+                                        event.productoId.toString()
+                                    )
+                                } else {
+                                    // Ruta normal para pantallas sin argumentos (Login, Home, etc.)
+                                    finalRoute = event.route.route
+                                }
+
+                                navController.navigate(route = finalRoute) { // <-- Usa finalRoute
+                                    // --- FIN: LÓGICA MODIFICADA ---
+
                                     event.popUpToRoute?.let { popUpScreen ->
                                         popUpTo(popUpScreen.route) {
                                             inclusive = event.inclusive
@@ -106,6 +124,24 @@ class MainActivity : ComponentActivity(){
                         composable(route= Screen.Checkout.route){
                             PlaceholderScreen(name="Checkout",viewModel=viewModel)
                         }
+                        composable(
+                                route = Screen.DetalleProducto.route,
+                                arguments = listOf(navArgument("productoId") { type = NavType.IntType })
+                            ) { backStackEntry ->
+                                val productoId = backStackEntry.arguments?.getInt("productoId")
+                                if (productoId == null) {
+                                    // Manejar error, quizá navegar hacia atrás
+                                    navController.popBackStack()
+                                } else {
+                                    DetalleProductoScreen(
+                                        mainViewModel = mainViewModel,
+                                        cartViewModel = cartViewModel,
+                                        productoId = productoId
+                                    )
+                                }
+                            }
+
+
 
 
 

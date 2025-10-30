@@ -12,5 +12,6 @@ data class Usuario (
     val nombre: String="",
     val email: String ="",
     val passHash: String ="",
-    val direccion: String= ""
+    val direccion: String= "",
+    val imagenUrl: String = ""
 )

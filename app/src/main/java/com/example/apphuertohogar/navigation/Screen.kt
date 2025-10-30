@@ -9,4 +9,5 @@ sealed class Screen(val route:String) {
     data object Carrito: Screen(route="carrito_screen")
     data object Checkout: Screen(route="checkout_screen")
     data object Perfil: Screen(route="perfil_screen")
+    data object DetalleProducto: Screen(route="detalle_producto/{productoId}")
 }

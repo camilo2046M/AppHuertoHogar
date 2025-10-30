@@ -53,10 +53,17 @@ class PerfilViewModel(application: Application): AndroidViewModel(application) {
 
         _uiState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
-
-            usuarioId.let { nonNullUserId ->
+            usuarioId?.let { nonNullUserId ->
                 val usuario = usuarioDao.getUserById(nonNullUserId)
                 _uiState.update { state -> state.copy(isLoading = false, usuario = usuario) }
+
+                // --- AÑADE ESTO ---
+                // Carga la imagen guardada (si existe) en el StateFlow
+                if (usuario != null && usuario.imagenUrl.isNotBlank()) {
+                    _imageUri.update { Uri.parse(usuario.imagenUrl) }
+                } else {
+                    _imageUri.update { null }
+                }
             }
 
         }
@@ -66,6 +73,12 @@ class PerfilViewModel(application: Application): AndroidViewModel(application) {
         _uiState.update { currentState ->
             val resetNombre = if (currentState.isEditing) currentState.usuario?.nombre ?: "" else currentState.editableNombre
             val resetDireccion = if (currentState.isEditing) currentState.usuario?.direccion ?: "" else currentState.editableDireccion
+            val savedUri = if (currentState.usuario != null && currentState.usuario.imagenUrl.isNotBlank()) {
+                Uri.parse(currentState.usuario.imagenUrl)
+            } else {
+                null
+            }
+            _imageUri.update { savedUri }
             currentState.copy(
                 isEditing = !currentState.isEditing,
                 editableNombre = resetNombre,
@@ -114,7 +127,8 @@ class PerfilViewModel(application: Application): AndroidViewModel(application) {
 
         val updatedUsuario = currentUser.copy(
             nombre = currentState.editableNombre,
-            direccion = currentState.editableDireccion
+            direccion = currentState.editableDireccion,
+            imagenUrl = _imageUri.value?.toString() ?: currentUser.imagenUrl
         )
 
         viewModelScope.launch {
