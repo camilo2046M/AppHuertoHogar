@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.apphuertohogar.data.UserPreferencesRepository
+import com.example.apphuertohogar.model.AuthState
 import com.example.apphuertohogar.navigation.NavigationEvent
 import com.example.apphuertohogar.navigation.Screen
 import kotlinx.coroutines.CoroutineScope
@@ -13,6 +14,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -22,11 +24,18 @@ class MainViewModel(application: Application): AndroidViewModel(application) {
     private val _navigationEvents = MutableSharedFlow<NavigationEvent>()
     val navigationEvents: SharedFlow<NavigationEvent> = _navigationEvents.asSharedFlow()
 
-    val loggedInUserId: StateFlow<Int?> = userPreferencesRepository.loggedInUserIdFlow
+    val authState: StateFlow<AuthState> = userPreferencesRepository.loggedInUserIdFlow
+        .map { id ->
+            if (id == null) {
+                AuthState.Unauthenticated
+            } else {
+                AuthState.Authenticated(id)
+            }
+        }
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = null
+            started = SharingStarted.WhileSubscribed(5000), // 5 segundos
+            initialValue = AuthState.Loading // <-- Inicia como Loading
         )
 
     fun setLoggedInUser(userId: Int) {
