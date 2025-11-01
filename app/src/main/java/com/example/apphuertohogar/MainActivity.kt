@@ -29,9 +29,16 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.ui.Alignment
 import kotlinx.coroutines.flow.first
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.collectAsState
 import androidx.navigation.navArgument
 import com.example.apphuertohogar.ui.detalleproducto.DetalleProductoScreen
 import androidx.navigation.NavType
+import com.example.apphuertohogar.model.AuthState
+import com.example.apphuertohogar.ui.cart.CartScreen
+import com.example.apphuertohogar.ui.login.LoginScreen
+import com.example.apphuertohogar.ui.perfil.ProfileScreen
+
+
 class MainActivity : ComponentActivity(){
     override fun onCreate(savedInstanceState: Bundle?){
         super.onCreate(savedInstanceState)
@@ -41,39 +48,23 @@ class MainActivity : ComponentActivity(){
                 val mainViewModel: MainViewModel = viewModel()
                 val viewModel: MainViewModel = viewModel()
                 val cartViewModel: CartViewModel = viewModel()
-
-                val startDestination by produceState<String?>(initialValue = null) {
-                    val initialUserId = mainViewModel.loggedInUserId.first()
-                    value = if (initialUserId != null) {
-                        Screen.Home.route
-                    } else {
-                        Screen.Login.route
-                    }
-                    println(">>> Determined startDestination: $value")
-                }
+                val authState by mainViewModel.authState.collectAsState()
 
 
                 LaunchedEffect(Unit) {
                     mainViewModel.navigationEvents.collectLatest { event ->
                         when (event) {
                             is NavigationEvent.NavigateTo -> {
-
-                                // --- INICIO: LÓGICA MODIFICADA ---
                                 val finalRoute: String
                                 if (event.productoId != null) {
-                                    // Construye la ruta dinámica: ej. "detalle_producto/5"
                                     finalRoute = event.route.route.replace(
                                         "{productoId}",
                                         event.productoId.toString()
                                     )
                                 } else {
-                                    // Ruta normal para pantallas sin argumentos (Login, Home, etc.)
                                     finalRoute = event.route.route
                                 }
-
-                                navController.navigate(route = finalRoute) { // <-- Usa finalRoute
-                                    // --- FIN: LÓGICA MODIFICADA ---
-
+                                navController.navigate(route = finalRoute) {
                                     event.popUpToRoute?.let { popUpScreen ->
                                         popUpTo(popUpScreen.route) {
                                             inclusive = event.inclusive
@@ -88,69 +79,83 @@ class MainActivity : ComponentActivity(){
                     }
                 }
                 Scaffold { innerPadding ->
-                    if (startDestination == null) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator()
+                    when (authState) {
+                        // 1. Estado de Carga
+                        is AuthState.Loading -> {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator()
+                            }
                         }
-                    } else {
-                        NavHost(
-                            navController = navController,
-                            startDestination = startDestination!!,
-                            modifier = Modifier.padding(paddingValues = innerPadding)
-                        ) {
-                        composable(route= Screen.Login.route){
-                            com.example.apphuertohogar.ui.login.LoginScreen(mainViewModel = viewModel)
+                        is AuthState.Unauthenticated -> {
+                            NavHost(
+                                navController = navController,
+                                startDestination = Screen.Login.route, // Inicia en Login
+                                modifier = Modifier.padding(paddingValues = innerPadding)
+                            ) {
+                                composable(route= Screen.Login.route){
+                                    LoginScreen(mainViewModel = mainViewModel)
+                                }
+                                composable(route= Screen.Registro.route){
+                                    RegistroScreen(mainViewModel = mainViewModel)
+                                }
+                            }
                         }
-                        composable(route= Screen.Registro.route){
-                            com.example.apphuertohogar.ui.registro.RegistroScreen(mainViewModel= viewModel)
-                        }
-                        composable(route= Screen.Home.route){
-                            com.example.apphuertohogar.ui.home.HomeScreen(mainViewModel = viewModel, cartViewModel=cartViewModel)
-                        }
-                        composable(route = Screen.Perfil.route) {
-                            com.example.apphuertohogar.ui.perfil.ProfileScreen(
-                                mainViewModel = mainViewModel
-                            )
-                        }
-                        composable(route=Screen.Carrito.route){
-                            com.example.apphuertohogar.ui.cart.CartScreen(
-                                mainViewModel = mainViewModel,
-                                cartViewModel = cartViewModel
-                            )
-                        }
-                        composable(route= Screen.Checkout.route){
-                            PlaceholderScreen(name="Checkout",viewModel=viewModel)
-                        }
-                        composable(
-                                route = Screen.DetalleProducto.route,
-                                arguments = listOf(navArgument("productoId") { type = NavType.IntType })
-                            ) { backStackEntry ->
-                                val productoId = backStackEntry.arguments?.getInt("productoId")
-                                if (productoId == null) {
-                                    // Manejar error, quizá navegar hacia atrás
-                                    navController.popBackStack()
-                                } else {
-                                    DetalleProductoScreen(
+                        // 3. Autenticado (Ruta de inicio: Home)
+                        is AuthState.Authenticated -> {
+                            // val userId = (authState as AuthState.Authenticated).userId // (Lo tienes si lo necesitas)
+                            NavHost(
+                                navController = navController,
+                                startDestination = Screen.Home.route, // Inicia en Home
+                                modifier = Modifier.padding(paddingValues = innerPadding)
+                            ) {
+                                // Definimos TODAS las rutas de la app aquí
+                                composable(route= Screen.Login.route){
+                                    LoginScreen(mainViewModel = mainViewModel)
+                                }
+                                composable(route= Screen.Registro.route){
+                                    RegistroScreen(mainViewModel = mainViewModel)
+                                }
+                                composable(route= Screen.Home.route){
+                                    HomeScreen(mainViewModel = mainViewModel, cartViewModel=cartViewModel)
+                                }
+                                composable(route = Screen.Perfil.route) {
+                                    ProfileScreen(mainViewModel = mainViewModel)
+                                }
+                                composable(route=Screen.Carrito.route){
+                                    CartScreen(
                                         mainViewModel = mainViewModel,
-                                        cartViewModel = cartViewModel,
-                                        productoId = productoId
+                                        cartViewModel = cartViewModel
                                     )
+                                }
+                                composable(
+                                    route = Screen.DetalleProducto.route,
+                                    arguments = listOf(navArgument("productoId") { type = NavType.IntType })
+                                ) { backStackEntry ->
+                                    val productoId = backStackEntry.arguments?.getInt("productoId")
+                                    if (productoId == null) {
+                                        navController.popBackStack()
+                                    } else {
+                                        DetalleProductoScreen(
+                                            mainViewModel = mainViewModel,
+                                            cartViewModel = cartViewModel,
+                                            productoId = productoId
+                                        )
+                                    }
+                                }
+                                composable(route= Screen.Checkout.route){
+                                    PlaceholderScreen(name="Checkout",viewModel=mainViewModel)
                                 }
                             }
 
-
-
-
-
                     }
-                }
-            }
-        }
-    }
-}
+                } // Fin Scaffold
+            } // Fin Theme
+        } // Fin setContent
+    } // Fin onCreate
+} // Fin Activity
 
 @Composable
 fun PlaceholderScreen(name:String,viewModel: MainViewModel){

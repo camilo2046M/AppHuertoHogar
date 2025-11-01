@@ -32,14 +32,14 @@ import com.example.apphuertohogar.viewmodel.MainViewModel
 import com.example.apphuertohogar.viewmodel.PerfilViewModel
 import kotlinx.coroutines.launch
 import java.io.File
-
+import com.example.apphuertohogar.model.AuthState
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     mainViewModel: MainViewModel,
     perfilViewModel: PerfilViewModel = viewModel()
 ) {
-    val loggedInUserId by mainViewModel.loggedInUserId.collectAsState()
+    val authState by mainViewModel.authState.collectAsState()
     val context = LocalContext.current
     val uiState: PerfilUiState by perfilViewModel.uiState.collectAsState()
     val scope = rememberCoroutineScope()
@@ -47,6 +47,7 @@ fun ProfileScreen(
     val imageUri by perfilViewModel.imageUri.collectAsState()
     var showDialog by remember { mutableStateOf(false) }
     var uriForCameraCapture: Uri? by remember { mutableStateOf(null) }
+
 
     val takePictureLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
@@ -109,8 +110,20 @@ fun ProfileScreen(
         }
     }
 
-    LaunchedEffect(loggedInUserId) {
-        perfilViewModel.loadUserProfile(loggedInUserId)
+    LaunchedEffect(authState) {
+        when (val state = authState) {
+            is AuthState.Authenticated -> {
+                // Si estamos autenticados, carga el perfil con el ID
+                perfilViewModel.loadUserProfile(state.userId)
+            }
+            is AuthState.Unauthenticated -> {
+                // Si cerramos sesión, limpia el perfil
+                perfilViewModel.loadUserProfile(null)
+            }
+            is AuthState.Loading -> {
+                // Mientras carga, no hacemos nada (PerfilViewModel tiene su propio isLoading)
+            }
+        }
     }
 
     Scaffold(
@@ -163,7 +176,11 @@ fun ProfileScreen(
                 uiState.isLoading -> {
                     CircularProgressIndicator(modifier = Modifier.padding(top = 32.dp))
                 }
-                uiState.usuario != null && loggedInUserId != null -> {
+
+                // --- INICIO DE LA CORRECCIÓN ---
+                // Comprueba si el usuario del perfil está cargado Y si el estado de
+                // autenticación general sigue "Autenticado"
+                uiState.usuario != null && authState is AuthState.Authenticated -> {
                     // Profile Picture
                     AsyncImage(
                         model = imageUri ?: R.drawable.iconapphuertohogar,
