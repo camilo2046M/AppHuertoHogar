@@ -181,26 +181,37 @@ fun ProfileScreen(
                 // Comprueba si el usuario del perfil está cargado Y si el estado de
                 // autenticación general sigue "Autenticado"
                 uiState.usuario != null && authState is AuthState.Authenticated -> {
-                    // Profile Picture
+
+                    // --- INICIO DE CORRECCIÓN ---
+                    // 1. Definimos un modifier condicional
+                    val imageModifier = if (uiState.isEditing) {
+                        Modifier
+                            .size(120.dp)
+                            .clip(CircleShape)
+                            .clickable { showDialog = true } // <-- Clickable SÓLO si isEditing
+                    } else {
+                        Modifier
+                            .size(120.dp)
+                            .clip(CircleShape) // <-- No clickable
+                    }
                     AsyncImage(
                         model = imageUri ?: R.drawable.iconapphuertohogar,
                         contentDescription = "Profile Picture",
-                        modifier = Modifier
-                            .size(120.dp)
-                            .clip(CircleShape)
-                            .clickable { showDialog = true },
+                        modifier = imageModifier, // <-- Usamos el modifier condicional
                         contentScale = ContentScale.Crop,
                         placeholder = painterResource(id = R.drawable.iconapphuertohogar),
                         error = painterResource(id = R.drawable.iconapphuertohogar)
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        "Toca la imagen para cambiarla",
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.clickable { showDialog = true }
-                    )
-                    Spacer(modifier = Modifier.height(24.dp))
 
+                    // 3. Mostramos el texto de ayuda SÓLO si está editando
+                    if (uiState.isEditing) {
+                        Text(
+                            "Toca la imagen para cambiarla",
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.clickable { showDialog = true }
+                        )
+                    }
                     if (uiState.isEditing) {
                         EditProfileForm(uiState = uiState, perfilViewModel = perfilViewModel)
                     } else {

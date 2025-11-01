@@ -24,8 +24,12 @@ import com.example.apphuertohogar.navigation.Screen
 import androidx.compose.material.icons.filled.Person
 import com.example.apphuertohogar.navigation.NavigationEvent
 import androidx.compose.foundation.clickable
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)@Composable
 fun HomeScreen(
     mainViewModel: MainViewModel,
     homeViewModel: HomeViewModel = viewModel(),
@@ -63,10 +67,22 @@ fun HomeScreen(
                 .padding(16.dp),
             contentAlignment = Alignment.Center
         ) {
-            if (uiState.isLoading) {
+
+            // --- REEMPLAZA TU if (uiState.isLoading) ... else ... CON ESTO: ---
+
+            // 1. El indicador de carga aparecerá y desaparecerá con un fundido
+            AnimatedVisibility(
+                visible = uiState.isLoading,
+                enter = fadeIn(animationSpec = tween(500)),
+                exit = fadeOut(animationSpec = tween(500))
+            ) {
                 CircularProgressIndicator()
             }
-            else {
+
+            AnimatedVisibility(
+                visible = !uiState.isLoading,
+                enter = fadeIn(animationSpec = tween(1000, delayMillis = 300))
+            ) {
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
@@ -82,7 +98,6 @@ fun HomeScreen(
                         ProductoCard(
                             producto = producto,
                             cartViewModel = cartViewModel,
-                            // MODIFICA onAddToCart por onCardClick
                             onCardClick = {
                                 mainViewModel.navigateTo(
                                     NavigationEvent.NavigateTo(
