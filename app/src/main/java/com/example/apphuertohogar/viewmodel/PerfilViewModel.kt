@@ -71,18 +71,26 @@ class PerfilViewModel(application: Application): AndroidViewModel(application) {
 
     fun toggleEditMode() {
         _uiState.update { currentState ->
-            val resetNombre = if (currentState.isEditing) currentState.usuario?.nombre ?: "" else currentState.editableNombre
-            val resetDireccion = if (currentState.isEditing) currentState.usuario?.direccion ?: "" else currentState.editableDireccion
-            val savedUri = if (currentState.usuario != null && currentState.usuario.imagenUrl.isNotBlank()) {
-                Uri.parse(currentState.usuario.imagenUrl)
-            } else {
-                null
+            val newEditingState = !currentState.isEditing
+            val currentUser = currentState.usuario
+
+            // Si estamos cancelando (isEditing era 'true')
+            if (!newEditingState) {
+                // Reseteamos la imagen a la que está guardada
+                val savedUri = if (currentUser != null && currentUser.imagenUrl.isNotBlank()) {
+                    Uri.parse(currentUser.imagenUrl)
+                } else {
+                    null
+                }
+                _imageUri.update { savedUri }
             }
-            _imageUri.update { savedUri }
+
             currentState.copy(
-                isEditing = !currentState.isEditing,
-                editableNombre = resetNombre,
-                editableDireccion = resetDireccion,
+                isEditing = newEditingState,
+                // Al entrar o salir del modo edición, SIEMPRE mostramos los datos guardados
+                editableNombre = currentUser?.nombre ?: "",
+                editableDireccion = currentUser?.direccion ?: "",
+                // Limpiamos los errores
                 nombreError = null,
                 direccionError = null
             )

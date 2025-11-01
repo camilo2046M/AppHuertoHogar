@@ -46,11 +46,12 @@ class MainActivity : ComponentActivity(){
             AppHuertoHogarTheme {
                 val navController = rememberNavController()
                 val mainViewModel: MainViewModel = viewModel()
-                val viewModel: MainViewModel = viewModel()
                 val cartViewModel: CartViewModel = viewModel()
+
                 val authState by mainViewModel.authState.collectAsState()
 
-
+                // Tu LaunchedEffect para manejar los eventos de navegación
+                // (Este bloque de código está perfecto, no lo cambies)
                 LaunchedEffect(Unit) {
                     mainViewModel.navigationEvents.collectLatest { event ->
                         when (event) {
@@ -79,8 +80,14 @@ class MainActivity : ComponentActivity(){
                     }
                 }
                 Scaffold { innerPadding ->
+                    val startDestination = when (authState) {
+                        is AuthState.Authenticated -> Screen.Home.route
+                        is AuthState.Unauthenticated -> Screen.Login.route
+                        is AuthState.Loading -> null // Se maneja abajo
+                    }
+
+                    // 2. Usamos el 'when' solo para mostrar "Cargando" o el NavHost
                     when (authState) {
-                        // 1. Estado de Carga
                         is AuthState.Loading -> {
                             Box(
                                 modifier = Modifier.fillMaxSize(),
@@ -89,68 +96,68 @@ class MainActivity : ComponentActivity(){
                                 CircularProgressIndicator()
                             }
                         }
-                        is AuthState.Unauthenticated -> {
-                            NavHost(
-                                navController = navController,
-                                startDestination = Screen.Login.route, // Inicia en Login
-                                modifier = Modifier.padding(paddingValues = innerPadding)
-                            ) {
-                                composable(route= Screen.Login.route){
-                                    LoginScreen(mainViewModel = mainViewModel)
-                                }
-                                composable(route= Screen.Registro.route){
-                                    RegistroScreen(mainViewModel = mainViewModel)
-                                }
-                            }
-                        }
-                        // 3. Autenticado (Ruta de inicio: Home)
-                        is AuthState.Authenticated -> {
-                            // val userId = (authState as AuthState.Authenticated).userId // (Lo tienes si lo necesitas)
-                            NavHost(
-                                navController = navController,
-                                startDestination = Screen.Home.route, // Inicia en Home
-                                modifier = Modifier.padding(paddingValues = innerPadding)
-                            ) {
-                                // Definimos TODAS las rutas de la app aquí
-                                composable(route= Screen.Login.route){
-                                    LoginScreen(mainViewModel = mainViewModel)
-                                }
-                                composable(route= Screen.Registro.route){
-                                    RegistroScreen(mainViewModel = mainViewModel)
-                                }
-                                composable(route= Screen.Home.route){
-                                    HomeScreen(mainViewModel = mainViewModel, cartViewModel=cartViewModel)
-                                }
-                                composable(route = Screen.Perfil.route) {
-                                    ProfileScreen(mainViewModel = mainViewModel)
-                                }
-                                composable(route=Screen.Carrito.route){
-                                    CartScreen(
-                                        mainViewModel = mainViewModel,
-                                        cartViewModel = cartViewModel
-                                    )
-                                }
-                                composable(
-                                    route = Screen.DetalleProducto.route,
-                                    arguments = listOf(navArgument("productoId") { type = NavType.IntType })
-                                ) { backStackEntry ->
-                                    val productoId = backStackEntry.arguments?.getInt("productoId")
-                                    if (productoId == null) {
-                                        navController.popBackStack()
-                                    } else {
-                                        DetalleProductoScreen(
+
+                        is AuthState.Authenticated, is AuthState.Unauthenticated -> {
+                            // Solo mostramos el NavHost si ya decidimos la ruta
+                            if (startDestination != null) {
+
+                                // 3. ¡UN SOLO NavHost con TODAS las rutas!
+                                NavHost(
+                                    navController = navController,
+                                    startDestination = startDestination, // <-- Aquí se decide dónde empezar
+                                    modifier = Modifier.padding(paddingValues = innerPadding)
+                                ) {
+                                    // Pon TODAS tus pantallas aquí
+                                    composable(route = Screen.Login.route) {
+                                        LoginScreen(mainViewModel = mainViewModel)
+                                    }
+                                    composable(route = Screen.Registro.route) {
+                                        RegistroScreen(mainViewModel = mainViewModel)
+                                    }
+                                    composable(route = Screen.Home.route) {
+                                        HomeScreen(
                                             mainViewModel = mainViewModel,
-                                            cartViewModel = cartViewModel,
-                                            productoId = productoId
+                                            cartViewModel = cartViewModel
+                                        )
+                                    }
+                                    composable(route = Screen.Perfil.route) {
+                                        ProfileScreen(mainViewModel = mainViewModel)
+                                    }
+                                    composable(route = Screen.Carrito.route) {
+                                        CartScreen(
+                                            mainViewModel = mainViewModel,
+                                            cartViewModel = cartViewModel
+                                        )
+                                    }
+                                    composable(
+                                        route = Screen.DetalleProducto.route,
+                                        arguments = listOf(navArgument("productoId") {
+                                            type = NavType.IntType
+                                        })
+                                    ) { backStackEntry ->
+                                        val productoId =
+                                            backStackEntry.arguments?.getInt("productoId")
+                                        if (productoId == null) {
+                                            navController.popBackStack()
+                                        } else {
+                                            DetalleProductoScreen(
+                                                mainViewModel = mainViewModel,
+                                                cartViewModel = cartViewModel,
+                                                productoId = productoId
+                                            )
+                                        }
+                                    }
+                                    composable(route = Screen.Checkout.route) {
+                                        PlaceholderScreen(
+                                            name = "Checkout",
+                                            viewModel = mainViewModel
                                         )
                                     }
                                 }
-                                composable(route= Screen.Checkout.route){
-                                    PlaceholderScreen(name="Checkout",viewModel=mainViewModel)
-                                }
                             }
-
+                        }
                     }
+                 // --- FIN DE LA CORRECCIÓN ---
                 } // Fin Scaffold
             } // Fin Theme
         } // Fin setContent
@@ -163,4 +170,3 @@ fun PlaceholderScreen(name:String,viewModel: MainViewModel){
         Text(text = "Estás en la pantalla: $name")
         }
     }
-}

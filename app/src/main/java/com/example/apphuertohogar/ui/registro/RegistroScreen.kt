@@ -80,14 +80,18 @@ fun RegistroScreen(
                 registroViewModel.registrarUsuario(
                     onSuccess = { newUsuarioId -> //
                         mainViewModel.setLoggedInUser(newUsuarioId)
+
+                        // ELIMINA ESTA NAVEGACIÓN MANUAL
+                        /*
                         mainViewModel.navigateTo(
                             NavigationEvent.NavigateTo(
                                 route = Screen.Home,
-                                popUpToRoute = Screen.Login, // Pop back up to Login screen (start destination)
-                                inclusive = true,            // Remove Login/Register screens
-                                singleTop = true             // Avoid multiple Home instances
+                                popUpToRoute = Screen.Login,
+                                inclusive = true,
+                                singleTop = true
                             )
                         )
+                        */
                     },
                     onFailure = { errorMessage ->
                         println("Error de registro: $errorMessage")
