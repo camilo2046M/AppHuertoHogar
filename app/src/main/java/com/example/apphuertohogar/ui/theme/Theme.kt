@@ -10,27 +10,48 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
-private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+// 1. Define tu paleta de colores de marca para el modo claro
+private val HuertoHogarLightColorScheme = lightColorScheme(
+    primary = VerdeEsmeralda,           // Botones, TopAppBar, íconos activos
+    onPrimary = BlancoSuave,            // Texto sobre botones primarios
+    secondary = AmarilloMostaza,        // Botones de ofertas, badges
+    onSecondary = GrisOscuro,           // Texto sobre botones secundarios
+    tertiary = MarronClaro,             // Títulos, acentos
+    onTertiary = BlancoSuave,           // Texto sobre acentos
+    background = BlancoSuave,           // Fondo principal de la app
+    onBackground = GrisOscuro,          // Texto principal sobre el fondo
+    surface = BlancoSuave,              // Fondo de Cards, Menús
+    onSurface = GrisOscuro,             // Texto sobre las Cards
+    onSurfaceVariant = GrisMedio        // Texto secundario, descripciones
 )
 
-private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
+// (Opcional: puedes crear un HuertoHogarDarkColorScheme aquí si quieres)
+private val HuertoHogarDarkColorScheme = darkColorScheme(
+    primary = VerdeEsmeralda,
+    onPrimary = BlancoSuave,
+    secondary = AmarilloMostaza,
+    onSecondary = GrisOscuro,
+    tertiary = MarronClaro,
+    onTertiary = BlancoSuave,
+    background = Color(0xFF1C1C1E),     // Un fondo oscuro
+    onBackground = BlancoSuave,
+    surface = Color(0xFF2C2C2E),        // Cards oscuras
+    onSurface = BlancoSuave,
+    onSurfaceVariant = Color(0xFFAAAAAA) // Texto secundario gris claro
 )
+
 
 @Composable
 fun AppHuertoHogarTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    // 2. DESACTIVAMOS el color dinámico para usar nuestra marca
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
@@ -39,13 +60,16 @@ fun AppHuertoHogarTheme(
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
 
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
+        // 3. Usamos nuestras paletas de colores
+        darkTheme -> HuertoHogarDarkColorScheme
+        else -> HuertoHogarLightColorScheme
     }
+
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
+            // 4. Hacemos la barra de estado del color primario
             window.statusBarColor = colorScheme.primary.toArgb()
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = darkTheme
         }
@@ -53,7 +77,7 @@ fun AppHuertoHogarTheme(
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = Typography,
+        typography = Typography, // Esto lo cambiaremos en el paso de tipografía
         content = content
     )
 }

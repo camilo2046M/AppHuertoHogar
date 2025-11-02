@@ -11,7 +11,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,7 +25,6 @@ import com.example.apphuertohogar.model.AuthState
 import com.example.apphuertohogar.navigation.NavigationEvent
 import com.example.apphuertohogar.navigation.Screen
 import com.example.apphuertohogar.ui.cart.CartScreen
-import com.example.apphuertohogar.ui.checkout.CheckoutScreen // Importar la nueva pantalla
 import com.example.apphuertohogar.ui.detalleproducto.DetalleProductoScreen
 import com.example.apphuertohogar.ui.home.HomeScreen
 import com.example.apphuertohogar.ui.login.LoginScreen
@@ -34,9 +32,14 @@ import com.example.apphuertohogar.ui.perfil.ProfileScreen
 import com.example.apphuertohogar.ui.registro.RegistroScreen
 import com.example.apphuertohogar.ui.theme.AppHuertoHogarTheme
 import com.example.apphuertohogar.viewmodel.CartViewModel
-import com.example.apphuertohogar.viewmodel.DetalleProductoViewModel
 import com.example.apphuertohogar.viewmodel.MainViewModel
 import kotlinx.coroutines.flow.collectLatest
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.unit.IntOffset
+import com.example.apphuertohogar.ui.checkout.CheckoutScreen // <-- 1. IMPORTAMOS LA NUEVA PANTALLA
 
 
 class MainActivity : ComponentActivity(){
@@ -44,28 +47,25 @@ class MainActivity : ComponentActivity(){
         super.onCreate(savedInstanceState)
         setContent{
             AppHuertoHogarTheme {
-                // Obtener ViewModels
                 val navController = rememberNavController()
                 val mainViewModel: MainViewModel = viewModel()
                 val cartViewModel: CartViewModel = viewModel()
 
                 val authState by mainViewModel.authState.collectAsState()
 
-                // Tu LaunchedEffect para manejar los eventos de navegación
                 LaunchedEffect(Unit) {
                     mainViewModel.navigationEvents.collectLatest { event ->
                         when (event) {
                             is NavigationEvent.NavigateTo -> {
-                                val finalRoute: String = if (event.productoId != null) {
-                                    // Construye la ruta para DetalleProducto con el ID
-                                    event.route.route.replace(
+                                val finalRoute: String
+                                if (event.productoId != null) {
+                                    finalRoute = event.route.route.replace(
                                         "{productoId}",
                                         event.productoId.toString()
                                     )
                                 } else {
-                                    event.route.route
+                                    finalRoute = event.route.route
                                 }
-
                                 navController.navigate(route = finalRoute) {
                                     event.popUpToRoute?.let { popUpScreen ->
                                         popUpTo(popUpScreen.route) {
@@ -82,6 +82,7 @@ class MainActivity : ComponentActivity(){
                 }
 
                 Scaffold { innerPadding ->
+
                     val startDestination = when (authState) {
                         is AuthState.Authenticated -> Screen.Home.route
                         is AuthState.Unauthenticated -> Screen.Login.route
@@ -97,7 +98,6 @@ class MainActivity : ComponentActivity(){
                                 CircularProgressIndicator()
                             }
                         }
-
                         is AuthState.Authenticated, is AuthState.Unauthenticated -> {
                             if (startDestination != null) {
 
@@ -106,52 +106,69 @@ class MainActivity : ComponentActivity(){
                                     startDestination = startDestination,
                                     modifier = Modifier.padding(paddingValues = innerPadding)
                                 ) {
-                                    composable(route = Screen.Login.route) {
+                                    val animSpec = tween<IntOffset>(durationMillis = 300)
+                                    val slideIn = slideInHorizontally(initialOffsetX = { it }, animationSpec = animSpec)
+                                    val slideOut = slideOutHorizontally(targetOffsetX = { -it }, animationSpec = animSpec)
+                                    val popSlideIn = slideInHorizontally(initialOffsetX = { -it }, animationSpec = animSpec)
+                                    val popSlideOut = slideOutHorizontally(targetOffsetX = { it }, animationSpec = animSpec)
+
+                                    composable(
+                                        route= Screen.Login.route,
+                                        enterTransition = { slideIn },
+                                        exitTransition = { slideOut },
+                                        popEnterTransition = { popSlideIn },
+                                        popExitTransition = { popSlideOut }
+                                    ){
                                         LoginScreen(mainViewModel = mainViewModel)
                                     }
-                                    composable(route = Screen.Registro.route) {
+                                    composable(
+                                        route= Screen.Registro.route,
+                                        enterTransition = { slideIn },
+                                        exitTransition = { slideOut },
+                                        popEnterTransition = { popSlideIn },
+                                        popExitTransition = { popSlideOut }
+                                    ){
                                         RegistroScreen(mainViewModel = mainViewModel)
                                     }
-                                    composable(route = Screen.Home.route) {
-                                        HomeScreen(
-                                            mainViewModel = mainViewModel,
-                                            cartViewModel = cartViewModel
-                                        )
+                                    composable(
+                                        route= Screen.Home.route,
+                                        enterTransition = { slideIn },
+                                        exitTransition = { slideOut },
+                                        popEnterTransition = { popSlideIn },
+                                        popExitTransition = { popSlideOut }
+                                    ){
+                                        HomeScreen(mainViewModel = mainViewModel, cartViewModel=cartViewModel)
                                     }
-                                    composable(route = Screen.Perfil.route) {
+                                    composable(
+                                        route = Screen.Perfil.route,
+                                        enterTransition = { slideIn },
+                                        exitTransition = { slideOut },
+                                        popEnterTransition = { popSlideIn },
+                                        popExitTransition = { popSlideOut }
+                                    ) {
                                         ProfileScreen(mainViewModel = mainViewModel)
                                     }
-                                    composable(route = Screen.Carrito.route) {
+                                    composable(
+                                        route=Screen.Carrito.route,
+                                        enterTransition = { slideIn },
+                                        exitTransition = { slideOut },
+                                        popEnterTransition = { popSlideIn },
+                                        popExitTransition = { popSlideOut }
+                                    ){
                                         CartScreen(
                                             mainViewModel = mainViewModel,
                                             cartViewModel = cartViewModel
                                         )
                                     }
-                                    // 🚀 RUTA DE CHECKOUT (FINALIZAR COMPRA)
-                                    composable(route = Screen.Checkout.route) {
-                                        // Asegura la autenticación (aunque el flujo ya lo gestiona)
-                                        val currentAuthState by mainViewModel.authState.collectAsState()
-                                        if (currentAuthState is AuthState.Authenticated) {
-                                            CheckoutScreen(
-                                                mainViewModel = mainViewModel,
-                                                cartViewModel = cartViewModel
-                                            )
-                                        } else {
-                                            // Fallback: Redirigir a Login si no está autenticado
-                                            LaunchedEffect(Unit) {
-                                                mainViewModel.navigateTo(NavigationEvent.NavigateTo(Screen.Login))
-                                            }
-                                        }
-                                    }
-
                                     composable(
                                         route = Screen.DetalleProducto.route,
-                                        arguments = listOf(navArgument("productoId") {
-                                            type = NavType.IntType
-                                        })
+                                        arguments = listOf(navArgument("productoId") { type = NavType.IntType }),
+                                        enterTransition = { slideIn },
+                                        exitTransition = { slideOut },
+                                        popEnterTransition = { popSlideIn },
+                                        popExitTransition = { popSlideOut }
                                     ) { backStackEntry ->
-                                        val productoId =
-                                            backStackEntry.arguments?.getInt("productoId")
+                                        val productoId = backStackEntry.arguments?.getInt("productoId")
                                         if (productoId == null) {
                                             navController.popBackStack()
                                         } else {
@@ -162,6 +179,19 @@ class MainActivity : ComponentActivity(){
                                             )
                                         }
                                     }
+
+                                    composable(
+                                        route= Screen.Checkout.route,
+                                        enterTransition = { slideIn },
+                                        exitTransition = { slideOut },
+                                        popEnterTransition = { popSlideIn },
+                                        popExitTransition = { popSlideOut }
+                                    ){
+                                        CheckoutScreen(
+                                            mainViewModel = mainViewModel,
+                                            cartViewModel = cartViewModel
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -171,10 +201,4 @@ class MainActivity : ComponentActivity(){
         }
     }
 }
-// Función PlaceholderScreen eliminada, ya no es necesaria en el NavHost.
-@Composable
-fun PlaceholderScreen(name:String,viewModel: MainViewModel){
-    Box(modifier = Modifier.padding(16.dp)){
-        Text(text = "Estás en la pantalla: $name")
-    }
-}
+

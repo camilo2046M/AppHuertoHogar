@@ -19,6 +19,7 @@ import com.example.apphuertohogar.viewmodel.CheckoutViewModel
 import com.example.apphuertohogar.viewmodel.MainViewModel
 import kotlinx.coroutines.launch
 import com.example.apphuertohogar.model.AuthState
+import com.example.apphuertohogar.ui.formatPrice // <-- 1. IMPORTAMOS LA FUNCIÓN
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -110,7 +111,8 @@ fun CheckoutScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text("${item.producto.nombre} (x${item.cantidad})", style = MaterialTheme.typography.bodyLarge)
-                            Text("$${item.producto.precio * item.cantidad}", style = MaterialTheme.typography.bodyLarge)
+                            // --- 2. APLICAMOS EL FORMATO AQUÍ ---
+                            Text(formatPrice(item.producto.precio * item.cantidad), style = MaterialTheme.typography.bodyLarge)
                         }
                     }
 
@@ -122,7 +124,8 @@ fun CheckoutScreen(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text("Total a Pagar:", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-                        Text("$${totalPrice}", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary)
+                        // --- 3. APLICAMOS EL FORMATO AQUÍ ---
+                        Text(formatPrice(totalPrice), style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary)
                     }
 
                     Spacer(Modifier.height(32.dp))
@@ -152,7 +155,7 @@ fun CheckoutScreen(
 
                     if (checkoutUiState.error != null) {
                         Text("Error: ${checkoutUiState.error}", color = MaterialTheme.colorScheme.error)
-                        Spacer(Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
                     }
 
                     Button(
@@ -173,7 +176,8 @@ fun CheckoutScreen(
                         if (checkoutUiState.isProcessing) {
                             CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(24.dp))
                         } else {
-                            Text("Confirmar y Pagar $${totalPrice}")
+                            // --- 4. APLICAMOS EL FORMATO AQUÍ ---
+                            Text("Confirmar y Pagar ${formatPrice(totalPrice)}")
                         }
                     }
 
