@@ -29,6 +29,10 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
+import com.example.apphuertohogar.ui.formatPrice
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)@Composable
 fun HomeScreen(
     mainViewModel: MainViewModel,
@@ -36,19 +40,31 @@ fun HomeScreen(
     cartViewModel: CartViewModel
 ) {
     val uiState by homeViewModel.uiState.collectAsState()
+    val cartItems by cartViewModel.cartItems.collectAsState()
+    val totalItemsInCart = cartItems.sumOf { it.cantidad }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("HuertoHogar") },
                 colors = TopAppBarDefaults.topAppBarColors( /* ... */ ),
-                actions = {
-                    IconButton(onClick = { mainViewModel.navigateTo(NavigationEvent.NavigateTo(route = Screen.Carrito)) }) {
+                actions = {IconButton(onClick = { mainViewModel.navigateTo(NavigationEvent.NavigateTo(route = Screen.Carrito)) }) {
+
+                    BadgedBox(
+                        badge = {
+                            if (totalItemsInCart > 0) {
+                                Badge {
+                                    Text(text = "$totalItemsInCart")
+                                }
+                            }
+                        }
+                    ) {
                         Icon(
                             imageVector = Icons.Filled.ShoppingCart,
                             contentDescription = "Carrito de Compras"
                         )
                     }
+                }
                     IconButton(onClick = { mainViewModel.navigateTo(NavigationEvent.NavigateTo(route = Screen.Perfil)) }) {
                         Icon(
                             imageVector = Icons.Filled.Person,
@@ -147,7 +163,7 @@ fun ProductoCard(
                 Text(producto.nombre, style = MaterialTheme.typography.titleLarge)
                 Text(producto.descripcion, style = MaterialTheme.typography.bodyMedium)
                 Text(
-                    text = "$${producto.precio}",
+                    text = formatPrice(producto.precio),
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary,

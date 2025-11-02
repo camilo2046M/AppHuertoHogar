@@ -14,6 +14,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.example.apphuertohogar.ui.formatPrice
 import com.example.apphuertohogar.viewmodel.CartViewModel
 import com.example.apphuertohogar.viewmodel.DetalleProductoViewModel
 import com.example.apphuertohogar.viewmodel.MainViewModel
@@ -78,7 +79,7 @@ fun DetalleProductoScreen(
                             )
                             Spacer(Modifier.height(8.dp))
                             Text(
-                                "$${producto.precio}",
+                                formatPrice(producto.precio),
                                 style = MaterialTheme.typography.headlineSmall,
                                 color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.SemiBold

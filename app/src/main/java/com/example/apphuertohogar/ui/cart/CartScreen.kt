@@ -24,7 +24,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.TextButton
 import com.example.apphuertohogar.navigation.NavigationEvent
-
+import com.example.apphuertohogar.ui.formatPrice
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -83,7 +83,7 @@ fun CartScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Total: $${totalPrice}",
+                        text = "Total: ${formatPrice(totalPrice)}",
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold
                     )
@@ -111,7 +111,7 @@ fun CartItemRow(
         Column(modifier = Modifier.weight(1f)) {
             Text(cartItem.producto.nombre, style = MaterialTheme.typography.titleMedium)
             Text(
-                "$${cartItem.producto.precio * cartItem.cantidad}", // Price per item * quantity
+                formatPrice(cartItem.producto.precio * cartItem.cantidad), // Price per item * quantity
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold
             )
