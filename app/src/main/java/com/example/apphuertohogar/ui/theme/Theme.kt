@@ -71,13 +71,13 @@ fun AppHuertoHogarTheme(
             val window = (view.context as Activity).window
             // 4. Hacemos la barra de estado del color primario
             window.statusBarColor = colorScheme.primary.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = darkTheme
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
         }
     }
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = Typography, // Esto lo cambiaremos en el paso de tipografía
+        typography = AppTypography, // Esto lo cambiaremos en el paso de tipografía
         content = content
     )
 }
