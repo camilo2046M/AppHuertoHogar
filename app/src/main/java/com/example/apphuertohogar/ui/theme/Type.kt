@@ -22,7 +22,7 @@ val montserratFontFamily = FontFamily(
 )
 
 // 3. Asigna las fuentes a los roles de tipografía
-val Typography = Typography(
+val AppTypography = Typography(
     // Encabezados (usarán Playfair Display)
     headlineLarge = TextStyle(
         fontFamily = playfairDisplayFontFamily,
