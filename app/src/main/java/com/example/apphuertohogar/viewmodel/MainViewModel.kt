@@ -53,21 +53,22 @@ class MainViewModel(application: Application): AndroidViewModel(application) {
         navigateTo(NavigationEvent.NavigateTo(route = Screen.Login))
     }
 
+    // --- CORRECCIÓN: Eliminamos (Dispatchers.Main) ---
     fun navigateTo(event: NavigationEvent.NavigateTo) {
-        viewModelScope.launch(Dispatchers.Main) {
+        viewModelScope.launch { // <-- Dispatchers.Main eliminado
             _navigationEvents.emit(event)
         }
     }
 
     fun navigateBack() {
-        viewModelScope.launch(Dispatchers.Main) {
+        viewModelScope.launch { // <-- Dispatchers.Main eliminado
             _navigationEvents.emit(NavigationEvent.PopBackStack)
         }
     }
 
 
     fun navigateUp() {
-        viewModelScope.launch(Dispatchers.Main) {
+        viewModelScope.launch { // <-- DispatchTers.Main eliminado
             _navigationEvents.emit(NavigationEvent.NavigateUp)
         }
     }

@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import androidx.lifecycle.ViewModel
+import com.example.apphuertohogar.security.GestorPassword
 
 class RegistroViewModel(application: Application) : AndroidViewModel(application){
 
@@ -71,10 +72,12 @@ class RegistroViewModel(application: Application) : AndroidViewModel(application
         if (validarFormulario()) {
             viewModelScope.launch {
                 try {
+                    val hashedPassword = GestorPassword.hashPassword(_uiState.value.pass)
+
                     val newUsuario = Usuario(
                         nombre = _uiState.value.nombre,
                         email = _uiState.value.email,
-                        passHash = _uiState.value.pass
+                        passHash = hashedPassword
                     )
                     val newUsuarioId = usuarioDao.insertarUsuario(newUsuario)
                     onSuccess(newUsuarioId.toInt())
