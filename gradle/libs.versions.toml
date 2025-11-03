@@ -14,8 +14,10 @@ composeBom = "2024.09.00"
 materialIconsExtendedAndroid = "1.7.8"
 navigationCompose = "2.9.5"
 roomRuntime = "2.8.3"
+jbcrypt = "0.4" #
 
 [libraries]
+jbcrypt = { group = "org.mindrot", name = "jbcrypt", version.ref = "jbcrypt" } #
 androidx-compose-material-icons-extended-android = { module = "androidx.compose.material:material-icons-extended-android", version.ref = "materialIconsExtendedAndroid" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }

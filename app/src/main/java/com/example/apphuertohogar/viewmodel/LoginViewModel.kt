@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import com.example.apphuertohogar.security.GestorPassword
+
 
 class LoginViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -81,7 +83,8 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
             if (usuario == null) {
                 _uiState.update { it.copy(emailError = "Usuario no encontrado") }
                 onFailure("Usuario no encontrado")
-            } else if (usuario.passHash != pass) { // WARNING: Comparing plain text - USE HASH in real app!
+
+            } else if (!GestorPassword.checkPassword(pass, usuario.passHash)) {
                 _uiState.update { it.copy(passError = "Contraseña incorrecta") }
                 onFailure("Contraseña incorrecta")
             } else {
@@ -91,5 +94,3 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 }
-
-

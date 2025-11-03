@@ -61,14 +61,14 @@ fun DetalleProductoScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .verticalScroll(rememberScrollState()) // Para que se pueda scrollear si el contenido es largo
+                            .verticalScroll(rememberScrollState())
                     ) {
                         AsyncImage(
                             model = producto.imagenUrl,
                             contentDescription = producto.nombre,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(250.dp), // Altura fija para la imagen
+                                .height(250.dp),
                             contentScale = ContentScale.Crop
                         )
                         Column(Modifier.padding(16.dp)) {

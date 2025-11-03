@@ -50,7 +50,6 @@ private val HuertoHogarDarkColorScheme = darkColorScheme(
 @Composable
 fun AppHuertoHogarTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // 2. DESACTIVAMOS el color dinámico para usar nuestra marca
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
@@ -59,8 +58,6 @@ fun AppHuertoHogarTheme(
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
-
-        // 3. Usamos nuestras paletas de colores
         darkTheme -> HuertoHogarDarkColorScheme
         else -> HuertoHogarLightColorScheme
     }
@@ -69,15 +66,20 @@ fun AppHuertoHogarTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            // 4. Hacemos la barra de estado del color primario
             window.statusBarColor = colorScheme.primary.toArgb()
+
+            // --- CORRECCIÓN DEL BUG DE LA BARRA DE ESTADO ---
+            // Le decimos que los íconos de la barra de estado sean oscuros
+            // SI NO estamos en darkTheme.
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
         }
     }
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = AppTypography, // Esto lo cambiaremos en el paso de tipografía
+        // --- CORRECIÓN DE TIPOGRAFÍA ---
+        // Usamos el val renombrado de Type.kt
+        typography = AppTypography,
         content = content
     )
 }

@@ -21,23 +21,35 @@ val montserratFontFamily = FontFamily(
     Font(R.font.montserrat_semibold, FontWeight.SemiBold)
 )
 
-// 3. Asigna las fuentes a los roles de tipografía
+// 3. RENOMBRAMOS 'Typography' a 'AppTypography' y usamos claves M3
 val AppTypography = Typography(
     // Encabezados (usarán Playfair Display)
-    headlineLarge = TextStyle(
+    displayLarge = TextStyle(
         fontFamily = playfairDisplayFontFamily,
         fontWeight = FontWeight.Bold,
-        fontSize = 32.sp
+        fontSize = 57.sp
     ),
-    headlineMedium = TextStyle(
+    displayMedium = TextStyle(
         fontFamily = playfairDisplayFontFamily,
         fontWeight = FontWeight.Bold,
-        fontSize = 28.sp
+        fontSize = 45.sp
     ),
-    headlineSmall = TextStyle(
-        fontFamily = playfairDisplayFontFamily, // (Si falla, usa: playfairDisplayFontFamily)
+    displaySmall = TextStyle(
+        fontFamily = playfairDisplayFontFamily,
         fontWeight = FontWeight.Bold,
-        fontSize = 24.sp
+        fontSize = 36.sp
+    ),
+
+    // Títulos (Playfair Display)
+    titleLarge = TextStyle(
+        fontFamily = playfairDisplayFontFamily,
+        fontWeight = FontWeight.Normal,
+        fontSize = 22.sp
+    ),
+    titleMedium = TextStyle(
+        fontFamily = playfairDisplayFontFamily,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 16.sp
     ),
 
     // Texto de cuerpo (usará Montserrat)
