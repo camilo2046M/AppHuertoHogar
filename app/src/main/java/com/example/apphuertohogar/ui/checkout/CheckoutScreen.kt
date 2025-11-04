@@ -19,7 +19,7 @@ import com.example.apphuertohogar.viewmodel.CheckoutViewModel
 import com.example.apphuertohogar.viewmodel.MainViewModel
 import kotlinx.coroutines.launch
 import com.example.apphuertohogar.model.AuthState
-import com.example.apphuertohogar.ui.formatPrice // <-- 1. IMPORTAMOS LA FUNCIÓN
+import com.example.apphuertohogar.ui.formatPrice
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,20 +34,16 @@ fun CheckoutScreen(
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Calcular el total
     val totalPrice = cartItems.sumOf { it.producto.precio * it.cantidad }
 
-    // Obtener el ID del usuario de forma segura
     val userId = (authState as? AuthState.Authenticated)?.userId
 
-    // Cargar datos del usuario cuando el ID esté disponible
     LaunchedEffect(userId) {
         if (userId != null) {
             checkoutViewModel.loadUserData(userId)
         }
     }
 
-    // Navegar a Home al confirmar la orden
     LaunchedEffect(checkoutUiState.orderConfirmed) {
         if (checkoutUiState.orderConfirmed) {
             mainViewModel.navigateTo(
@@ -90,7 +86,6 @@ fun CheckoutScreen(
                         CircularProgressIndicator()
                     }
                 }
-                // Si el carrito está vacío, no se puede hacer checkout
                 cartItems.isEmpty() -> {
                     Text("Tu carrito está vacío. No puedes finalizar la compra.", Modifier.padding(top = 32.dp))
                     Spacer(modifier = Modifier.height(16.dp))
@@ -98,10 +93,8 @@ fun CheckoutScreen(
                         Text("Ir a la tienda")
                     }
                 }
-                // Contenido principal del Checkout
                 else -> {
 
-                    // --- RESUMEN DEL PEDIDO ---
                     Text("Resumen del Pedido", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(8.dp))
 
@@ -111,26 +104,21 @@ fun CheckoutScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text("${item.producto.nombre} (x${item.cantidad})", style = MaterialTheme.typography.bodyLarge)
-                            // --- 2. APLICAMOS EL FORMATO AQUÍ ---
                             Text(formatPrice(item.producto.precio * item.cantidad), style = MaterialTheme.typography.bodyLarge)
                         }
                     }
 
                     Divider(Modifier.padding(vertical = 16.dp))
 
-                    // --- TOTAL FINAL ---
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text("Total a Pagar:", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-                        // --- 3. APLICAMOS EL FORMATO AQUÍ ---
                         Text(formatPrice(totalPrice), style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary)
                     }
 
                     Spacer(Modifier.height(32.dp))
-
-                    // --- DIRECCIÓN DE ENVÍO ---
                     Text("Dirección de Envío", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(8.dp))
 
@@ -151,8 +139,6 @@ fun CheckoutScreen(
 
                     Spacer(Modifier.height(32.dp))
 
-                    // --- BOTÓN DE CONFIRMACIÓN ---
-
                     if (checkoutUiState.error != null) {
                         Text("Error: ${checkoutUiState.error}", color = MaterialTheme.colorScheme.error)
                         Spacer(modifier = Modifier.height(8.dp))
@@ -163,7 +149,7 @@ fun CheckoutScreen(
                             if (userId != null) {
                                 checkoutViewModel.confirmOrder(
                                     userId = userId,
-                                    onSuccess = {}, // La navegación se hace con LaunchedEffect
+                                    onSuccess = {},
                                     onFailure = { errorMsg ->
                                         scope.launch { snackbarHostState.showSnackbar(errorMsg) }
                                     }
@@ -171,12 +157,11 @@ fun CheckoutScreen(
                             }
                         },
                         modifier = Modifier.fillMaxWidth().height(50.dp),
-                        enabled = !checkoutUiState.isProcessing && !direccion.isNullOrBlank() // Deshabilitar si está procesando o falta dirección
+                        enabled = !checkoutUiState.isProcessing && !direccion.isNullOrBlank()
                     ) {
                         if (checkoutUiState.isProcessing) {
                             CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(24.dp))
                         } else {
-                            // --- 4. APLICAMOS EL FORMATO AQUÍ ---
                             Text("Confirmar y Pagar ${formatPrice(totalPrice)}")
                         }
                     }

@@ -15,12 +15,20 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.example.apphuertohogar.data.ProductoDao
 
+/**
+ * Gestiona el estado de la pantalla Home, cargando la lista de productos.
+ *
+ * @param application Se usa para obtener el contexto para la base de datos.
+ */
 class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     private val productoDao: ProductoDao
     private val repository: ProductoRepository
 
     private val _uiState = MutableStateFlow(HomeUiState())
+    /**
+     * El estado de la UI (lista de productos, estado de carga) que la [HomeScreen] observa.
+     */
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     init {
@@ -28,12 +36,14 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         repository = ProductoRepository(productoDao)
 
         viewModelScope.launch {
+            // Se asegura de que haya datos de ejemplo si la BD está vacía
             poblarBaseDeDatosSiNecesario()
         }
 
         viewModelScope.launch {
+            // Observa la base de datos y actualiza la UI
             repository.todosLosProductos
-                .distinctUntilChanged()
+                .distinctUntilChanged() // Solo emite si la lista cambia
                 .collect { listaDeProductos ->
                     _uiState.update { currentState ->
                         currentState.copy(
@@ -45,6 +55,11 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /**
+     * Función de desarrollo.
+     * Rellena la base de datos local con productos de ejemplo si está vacía.
+     * En una app real, esto sería reemplazado por una llamada a una API.
+     */
     private suspend fun poblarBaseDeDatosSiNecesario() {
         if (productoDao.contarProductos() == 0) {
             val productos = listOf(

@@ -33,14 +33,25 @@ import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import com.example.apphuertohogar.ui.formatPrice
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)@Composable
+/**
+ * La pantalla principal (Home) de la aplicación.
+ * Muestra la lista de productos y la navegación al carrito y al perfil.
+ *
+ * @param mainViewModel El ViewModel principal, usado para manejar eventos de navegación.
+ * @param homeViewModel El ViewModel de esta pantalla, usado para obtener el estado (UiState) de los productos.
+ * @param cartViewModel El ViewModel del carrito, usado para obtener el contador de items para el [BadgedBox].
+ */
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
+@Composable
 fun HomeScreen(
     mainViewModel: MainViewModel,
     homeViewModel: HomeViewModel = viewModel(),
     cartViewModel: CartViewModel
 ) {
     val uiState by homeViewModel.uiState.collectAsState()
+
     val cartItems by cartViewModel.cartItems.collectAsState()
+
     val totalItemsInCart = cartItems.sumOf { it.cantidad }
 
     Scaffold(
@@ -48,23 +59,23 @@ fun HomeScreen(
             TopAppBar(
                 title = { Text("HuertoHogar") },
                 colors = TopAppBarDefaults.topAppBarColors( /* ... */ ),
-                actions = {IconButton(onClick = { mainViewModel.navigateTo(NavigationEvent.NavigateTo(route = Screen.Carrito)) }) {
+                actions = {
 
-                    BadgedBox(
-                        badge = {
-                            if (totalItemsInCart > 0) {
-                                Badge {
-                                    Text(text = "$totalItemsInCart")
+                    IconButton(onClick = { mainViewModel.navigateTo(NavigationEvent.NavigateTo(route = Screen.Carrito)) }) {
+                        BadgedBox(
+                            badge = {
+                                if (totalItemsInCart > 0) {
+                                    Badge { Text(text = "$totalItemsInCart") }
                                 }
                             }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.ShoppingCart,
+                                contentDescription = "Carrito de Compras"
+                            )
                         }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.ShoppingCart,
-                            contentDescription = "Carrito de Compras"
-                        )
                     }
-                }
+
                     IconButton(onClick = { mainViewModel.navigateTo(NavigationEvent.NavigateTo(route = Screen.Perfil)) }) {
                         Icon(
                             imageVector = Icons.Filled.Person,
@@ -84,9 +95,6 @@ fun HomeScreen(
             contentAlignment = Alignment.Center
         ) {
 
-            // --- REEMPLAZA TU if (uiState.isLoading) ... else ... CON ESTO: ---
-
-            // 1. El indicador de carga aparecerá y desaparecerá con un fundido
             AnimatedVisibility(
                 visible = uiState.isLoading,
                 enter = fadeIn(animationSpec = tween(500)),
@@ -99,13 +107,14 @@ fun HomeScreen(
                 visible = !uiState.isLoading,
                 enter = fadeIn(animationSpec = tween(1000, delayMillis = 300))
             ) {
+                // --- Lista de Productos ---
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     item {
                         Text(
                             "Nuestros Productos",
-                            style = MaterialTheme.typography.headlineSmall,
+                            style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -121,8 +130,7 @@ fun HomeScreen(
                                         productoId = producto.id
                                     )
                                 )
-                            }
-                        )
+                            })
                     }
                 }
             }
@@ -131,6 +139,13 @@ fun HomeScreen(
 }
 
 
+/**
+ * Un Composable que muestra un solo producto en una tarjeta.
+ *
+ * @param producto El objeto [Producto] a mostrar.
+ * @param cartViewModel El ViewModel al que se llamará al presionar 'Agregar'.
+ * @param onCardClick Lambda que se invoca al hacer clic en la tarjeta (para navegar a detalles).
+ */
 @Composable
 fun ProductoCard(
     producto: Producto,
@@ -149,6 +164,7 @@ fun ProductoCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Imagen (usando Coil)
             AsyncImage(
                 model = producto.imagenUrl,
                 contentDescription = producto.nombre,
@@ -158,9 +174,8 @@ fun ProductoCard(
                 contentScale = ContentScale.Crop
             )
 
-            // --- Text Content ---
             Column(modifier = Modifier.weight(1f)) {
-                Text(producto.nombre, style = MaterialTheme.typography.titleLarge)
+                Text(producto.nombre, style = MaterialTheme.typography.titleMedium)
                 Text(producto.descripcion, style = MaterialTheme.typography.bodyMedium)
                 Text(
                     text = formatPrice(producto.precio),

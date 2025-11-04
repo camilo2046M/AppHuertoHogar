@@ -29,7 +29,6 @@ fun DetalleProductoScreen(
 ) {
     val uiState by detalleViewModel.uiState.collectAsState()
 
-    // Carga el producto solo una vez
     LaunchedEffect(productoId) {
         detalleViewModel.cargarProducto(productoId)
     }

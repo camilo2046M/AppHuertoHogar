@@ -4,9 +4,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 
-// Creamos una entidad nueva.
-// Usamos 'primaryKeys' para asegurar que solo haya UNA entrada
-// por cada par de usuario/producto.
+
 @Entity(
     tableName = "carrito_items",
     primaryKeys = ["usuarioId", "productoId"],
@@ -16,13 +14,13 @@ import androidx.room.Index
             entity = Usuario::class,
             parentColumns = ["id"],
             childColumns = ["usuarioId"],
-            onDelete = ForeignKey.CASCADE // Si se borra el usuario, se borra su carrito
+            onDelete = ForeignKey.CASCADE
         ),
         ForeignKey(
             entity = Producto::class,
             parentColumns = ["id"],
             childColumns = ["productoId"],
-            onDelete = ForeignKey.CASCADE // Si se borra el producto, se quita del carrito
+            onDelete = ForeignKey.CASCADE
         )
     ]
 )
