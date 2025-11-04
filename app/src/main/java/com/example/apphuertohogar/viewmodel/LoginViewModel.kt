@@ -66,7 +66,6 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         val email = _uiState.value.email
         val pass = _uiState.value.pass
 
-        // Basic client-side validation first
         if (email.isBlank() || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
             _uiState.update { it.copy(emailError = "Correo inválido") }
             onFailure("Correo inválido")
@@ -88,7 +87,6 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                 _uiState.update { it.copy(passError = "Contraseña incorrecta") }
                 onFailure("Contraseña incorrecta")
             } else {
-                // Login successful! Pass the user ID back.
                 onSuccess(usuario.id)
             }
         }

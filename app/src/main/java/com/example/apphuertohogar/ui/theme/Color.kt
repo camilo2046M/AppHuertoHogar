@@ -16,7 +16,6 @@ val MarronClaro = Color(0xFF8B4513)
 val GrisOscuro = Color(0xFF333333)
 val GrisMedio = Color(0xFF666666)
 
-// Colores por defecto (los mantenemos por si acaso, pero no los usaremos)
 val Purple80 = Color(0xFFD0BCFF)
 val PurpleGrey80 = Color(0xFFCCC2DC)
 val Pink80 = Color(0xFFEFB8C8)

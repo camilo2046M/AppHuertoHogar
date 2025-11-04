@@ -8,13 +8,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -39,7 +36,7 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.unit.IntOffset
-import com.example.apphuertohogar.ui.checkout.CheckoutScreen // <-- 1. IMPORTAMOS LA NUEVA PANTALLA
+import com.example.apphuertohogar.ui.checkout.CheckoutScreen
 
 
 class MainActivity : ComponentActivity(){
@@ -106,7 +103,7 @@ class MainActivity : ComponentActivity(){
                                     startDestination = startDestination,
                                     modifier = Modifier.padding(paddingValues = innerPadding)
                                 ) {
-                                    val animSpec = tween<IntOffset>(durationMillis = 300)
+                                    val animSpec = tween<IntOffset>(durationMillis = 650)
                                     val slideIn = slideInHorizontally(initialOffsetX = { it }, animationSpec = animSpec)
                                     val slideOut = slideOutHorizontally(targetOffsetX = { -it }, animationSpec = animSpec)
                                     val popSlideIn = slideInHorizontally(initialOffsetX = { -it }, animationSpec = animSpec)

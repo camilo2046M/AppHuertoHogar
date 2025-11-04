@@ -65,18 +65,6 @@ fun LoginScreen(
                     onSuccess = { usuarioId ->
                         println("Inicio de sesión exitoso!!")
                         mainViewModel.setLoggedInUser(usuarioId)
-
-                        // ELIMINA ESTA NAVEGACIÓN MANUAL
-                        /*
-                        mainViewModel.navigateTo(
-                            NavigationEvent.NavigateTo(
-                                route = Screen.Home,
-                                popUpToRoute = Screen.Login,
-                                inclusive = true,
-                                singleTop = true
-                            )
-                        )
-                        */
                     },
                     onFailure = { errorMessage ->
                         println("Error de login: $errorMessage")

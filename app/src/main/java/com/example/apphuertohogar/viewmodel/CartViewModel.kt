@@ -1,53 +1,61 @@
 package com.example.apphuertohogar.viewmodel
 
-import androidx.lifecycle.ViewModel
-import com.example.apphuertohogar.model.CartItem
-import com.example.apphuertohogar.model.Producto
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.apphuertohogar.data.AppDatabase
 import com.example.apphuertohogar.data.CarritoDao
 import com.example.apphuertohogar.data.UserPreferencesRepository
+import com.example.apphuertohogar.model.CartItem
 import com.example.apphuertohogar.model.CarritoItem
+import com.example.apphuertohogar.model.Producto
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+
+/**
+ * Gestiona el estado del carrito de compras.
+ *
+ * Este ViewModel es responsable de:
+ * 1. Observar el usuario logueado desde [UserPreferencesRepository].
+ * 2. Observar los items del carrito de ese usuario desde [CarritoDao].
+ * 3. Proveer funciones para añadir, actualizar y eliminar items del carrito.
+ * 4. Asegurar que el carrito sea persistente (guardado en Room).
+ */
 class CartViewModel(application: Application) : AndroidViewModel(application) {
 
     private val carritoDao: CarritoDao
     private val userPreferencesRepository: UserPreferencesRepository
 
-    // Un Flow que nos dice quién es el usuario actual
+    // Un Flow que nos dice quién es el usuario actual.
+    // Se inicializa 'Eagerly' para que esté disponible de inmediato para cartItems.
     private val userIdFlow: StateFlow<Int?>
 
-    // El StateFlow público que la UI observará
+    /**
+     * El StateFlow público que la UI (CartScreen, HomeScreen) observará.
+     * Contiene la lista de items del carrito del usuario actual.
+     *
+     * Utiliza `flatMapLatest` para "reaccionar" a los cambios en [userIdFlow].
+     * Si el usuario cierra sesión (userId se vuelve null), el carrito se vacía.
+     * Si el usuario inicia sesión, se suscribe al Flow del nuevo userId.
+     */
     val cartItems: StateFlow<List<CartItem>>
 
     init {
-        // Obtenemos el DAO de la base de datos
         carritoDao = AppDatabase.getDatabase(application).carritoDao()
-        // Obtenemos el repositorio de preferencias del usuario
         userPreferencesRepository = UserPreferencesRepository(application)
 
-        // Obtenemos el ID del usuario logueado desde las preferencias
         userIdFlow = userPreferencesRepository.loggedInUserIdFlow
             .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
-        // Esta es la parte "mágica":
-        // 'flatMapLatest' escucha los cambios en userIdFlow.
-        // Si el userId cambia (de null a 1, o de 1 a null),
-        // cancela la observación de base de datos anterior y crea una nueva.
+        // Esta es la lógica reactiva principal
         cartItems = userIdFlow.flatMapLatest { userId ->
             if (userId == null) {
-                // Si no hay usuario, devuelve un Flow vacío
+                // Si no hay usuario, devuelve un Flow de lista vacía
                 emptyFlow()
             } else {
                 // Si hay un usuario, observa la base de datos
@@ -61,14 +69,20 @@ class CartViewModel(application: Application) : AndroidViewModel(application) {
         )
     }
 
-    // --- LÓGICA DE ACCIONES (AHORA ESCRIBE EN LA BD) ---
+    // --- ACCIONES DEL USUARIO ---
 
+    /**
+     * Añade un producto al carrito del usuario actual.
+     * Si el producto ya existe, incrementa su cantidad en 1.
+     *
+     * @param producto El [Producto] que se va a añadir.
+     */
     fun addToCart(producto: Producto) {
         viewModelScope.launch {
-            // 1. Obtener el ID del usuario actual
-            val userId = userIdFlow.value ?: return@launch // No hacer nada si no hay usuario
+            // No hacer nada si no hay un usuario logueado
+            val userId = userIdFlow.value ?: return@launch
 
-            // 2. Comprobar si el producto ya existe en la BD
+            // 1. Comprobar si el producto ya existe en la BD
             val existingItem = carritoDao.obtenerItemCrudo(userId, producto.id)
 
             val newQuantity: Int
@@ -80,26 +94,37 @@ class CartViewModel(application: Application) : AndroidViewModel(application) {
                 newQuantity = 1
             }
 
-            // 3. Crear la entidad CarritoItem para guardar/actualizar
+            // 2. Crear la entidad CarritoItem para guardar/actualizar
             val newItem = CarritoItem(
                 usuarioId = userId,
                 productoId = producto.id,
                 cantidad = newQuantity
             )
 
-            // 4. Insertar o Reemplazar en la base de datos
+            // 3. Insertar o Reemplazar en Room.
+            // OnConflictStrategy.REPLACE (definido en el DAO) se encarga de la lógica.
             carritoDao.insertarOActualizar(newItem)
         }
     }
 
+    /**
+     * Elimina un producto (y todas sus cantidades) del carrito.
+     *
+     * @param productoId El ID del producto a eliminar.
+     */
     fun removeFromCart(productoId: Int) {
         viewModelScope.launch {
             val userId = userIdFlow.value ?: return@launch
-            // Simplemente borra la fila de la base de datos
             carritoDao.eliminarProductoDelCarrito(userId, productoId)
         }
     }
 
+    /**
+     * Actualiza la cantidad de un producto en el carrito.
+     *
+     * @param productoId El ID del producto a actualizar.
+     * @param change La cantidad a añadir (ej. 1) o restar (ej. -1).
+     */
     fun updateQuantity(productoId: Int, change: Int) {
         viewModelScope.launch {
             val userId = userIdFlow.value ?: return@launch
@@ -118,4 +143,3 @@ class CartViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 }
-

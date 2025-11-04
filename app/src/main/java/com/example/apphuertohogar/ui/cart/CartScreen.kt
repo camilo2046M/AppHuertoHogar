@@ -56,7 +56,6 @@ fun CartScreen(
                 .padding(innerPadding)
                 .padding(16.dp)
         ) {
-            // If cart is empty, show a message
             if (cartItems.isEmpty()) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -65,9 +64,8 @@ fun CartScreen(
                     Text("Tu carrito está vacío", style = MaterialTheme.typography.bodyLarge)
                 }
             } else {
-                // If cart has items, show the list and total
                 LazyColumn(
-                    modifier = Modifier.weight(1f), // Takes available space
+                    modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(cartItems) { item ->
@@ -96,7 +94,6 @@ fun CartScreen(
     }
 }
 
-// Simple Composable to display one row in the cart
 @Composable
 fun CartItemRow(
     cartItem: CartItem,
@@ -105,19 +102,16 @@ fun CartItemRow(
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
-        // horizontalArrangement = Arrangement.SpaceBetween (Removed to use weights/spacers)
     ) {
-        // Product Info (Takes available space)
         Column(modifier = Modifier.weight(1f)) {
             Text(cartItem.producto.nombre, style = MaterialTheme.typography.titleMedium)
             Text(
-                formatPrice(cartItem.producto.precio * cartItem.cantidad), // Price per item * quantity
+                formatPrice(cartItem.producto.precio * cartItem.cantidad),
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold
             )
         }
 
-        // Quantity Controls
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(
                 onClick = { cartViewModel.updateQuantity(cartItem.producto.id, -1) },
@@ -126,7 +120,7 @@ fun CartItemRow(
                 Icon(Icons.Default.Remove, contentDescription = "Decrease quantity")
             }
 
-            Text("${cartItem.cantidad}", modifier = Modifier.padding(horizontal = 8.dp)) // Show quantity
+            Text("${cartItem.cantidad}", modifier = Modifier.padding(horizontal = 8.dp))
 
             IconButton(onClick = { cartViewModel.updateQuantity(cartItem.producto.id, 1) }) {
                 Icon(Icons.Default.Add, contentDescription = "Increase quantity")

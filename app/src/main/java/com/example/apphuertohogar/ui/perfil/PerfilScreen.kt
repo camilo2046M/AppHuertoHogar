@@ -113,15 +113,12 @@ fun ProfileScreen(
     LaunchedEffect(authState) {
         when (val state = authState) {
             is AuthState.Authenticated -> {
-                // Si estamos autenticados, carga el perfil con el ID
                 perfilViewModel.loadUserProfile(state.userId)
             }
             is AuthState.Unauthenticated -> {
-                // Si cerramos sesión, limpia el perfil
                 perfilViewModel.loadUserProfile(null)
             }
             is AuthState.Loading -> {
-                // Mientras carga, no hacemos nada (PerfilViewModel tiene su propio isLoading)
             }
         }
     }
@@ -155,7 +152,6 @@ fun ProfileScreen(
                             }
                         }
                     }
-                    // Logout button
                     IconButton(onClick = { mainViewModel.logoutUser() }) {
                         Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = "Cerrar Sesión")
                     }
@@ -177,34 +173,29 @@ fun ProfileScreen(
                     CircularProgressIndicator(modifier = Modifier.padding(top = 32.dp))
                 }
 
-                // --- INICIO DE LA CORRECCIÓN ---
-                // Comprueba si el usuario del perfil está cargado Y si el estado de
-                // autenticación general sigue "Autenticado"
                 uiState.usuario != null && authState is AuthState.Authenticated -> {
 
-                    // --- INICIO DE CORRECCIÓN ---
-                    // 1. Definimos un modifier condicional
+
                     val imageModifier = if (uiState.isEditing) {
                         Modifier
                             .size(120.dp)
                             .clip(CircleShape)
-                            .clickable { showDialog = true } // <-- Clickable SÓLO si isEditing
+                            .clickable { showDialog = true }
                     } else {
                         Modifier
                             .size(120.dp)
-                            .clip(CircleShape) // <-- No clickable
+                            .clip(CircleShape)
                     }
                     AsyncImage(
                         model = imageUri ?: R.drawable.iconapphuertohogar,
                         contentDescription = "Profile Picture",
-                        modifier = imageModifier, // <-- Usamos el modifier condicional
+                        modifier = imageModifier,
                         contentScale = ContentScale.Crop,
                         placeholder = painterResource(id = R.drawable.iconapphuertohogar),
                         error = painterResource(id = R.drawable.iconapphuertohogar)
                     )
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // 3. Mostramos el texto de ayuda SÓLO si está editando
                     if (uiState.isEditing) {
                         Text(
                             "Toca la imagen para cambiarla",
@@ -230,7 +221,7 @@ fun ProfileScreen(
                     )
                 }
             }
-        } // End Column
+        }
 
         if (showDialog) {
             AlertDialog(
@@ -247,7 +238,7 @@ fun ProfileScreen(
                                 Text("Tomar Foto")
                             }
                         }
-                        // "Elegir de Galería" Button - Launches gallery picker
+
                         TextButton(onClick = {
                             pickImageLauncher.launch("image/*")
                         }) {
@@ -259,7 +250,6 @@ fun ProfileScreen(
                     }
                 },
                 dismissButton = {
-                    // "Cancelar" Button
                     TextButton(onClick = { showDialog = false }) {
                         Text("Cancelar")
                     }
