@@ -2,6 +2,7 @@ package com.example.apphuertohogar.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.application
 import androidx.lifecycle.viewModelScope
 import com.example.apphuertohogar.data.UserPreferencesRepository
 import com.example.apphuertohogar.model.AuthState
@@ -9,6 +10,7 @@ import com.example.apphuertohogar.navigation.NavigationEvent
 import com.example.apphuertohogar.navigation.Screen
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import androidx.test.core.app.ApplicationProvider
 
 /**
  * ViewModel principal (Singleton) que gestiona el estado de autenticación
@@ -16,7 +18,7 @@ import kotlinx.coroutines.launch
  *
  * @param application Se usa para obtener el contexto para los Repositorios.
  */
-class MainViewModel(application: Application): AndroidViewModel(application) {
+open class MainViewModel() : AndroidViewModel(ApplicationProvider.getApplicationContext()) {
 
     private val userPreferencesRepository = UserPreferencesRepository(application)
     private val _navigationEvents = MutableSharedFlow<NavigationEvent>()
