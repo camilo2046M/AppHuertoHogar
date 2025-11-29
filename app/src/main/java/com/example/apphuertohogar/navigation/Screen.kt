@@ -10,4 +10,7 @@ sealed class Screen(val route:String) {
     data object Checkout: Screen(route="checkout_screen")
     data object Perfil: Screen(route="perfil_screen")
     data object DetalleProducto: Screen(route="detalle_producto/{productoId}")
+
+    data object PostListApi: Screen(route="post_list_api")
+
 }

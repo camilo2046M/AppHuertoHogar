@@ -42,6 +42,28 @@ android {
 }
 
 dependencies {
+
+    implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.androidx.ui.test.junit4)
+
+    testImplementation(libs.kotest.runner.junit5)
+    testImplementation(libs.kotest.assertions.core)
+
+    testImplementation(libs.junit.jupiter)
+
+    testImplementation(libs.mockk)
+
+    androidTestImplementation(libs.androidx.ui.test.junit4)
+    debugImplementation(libs.androidx.ui.test.manifest)
+
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
+
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.retrofit.core)
+    implementation(libs.retrofit.converter.gson)
+    implementation(libs.kotlinx.coroutines.android)
     implementation(libs.jbcrypt)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.compose.material.icons.extended.android)
@@ -69,4 +91,9 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+    testImplementation(libs.kotlinx.coroutines.test)
+
+    tasks.withType<Test>().configureEach{
+        useJUnitPlatform()
+    }
 }

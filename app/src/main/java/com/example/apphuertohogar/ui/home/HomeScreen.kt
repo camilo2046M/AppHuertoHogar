@@ -32,6 +32,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import com.example.apphuertohogar.ui.formatPrice
+import androidx.compose.material.icons.filled.Api
 
 /**
  * La pantalla principal (Home) de la aplicación.
@@ -60,7 +61,12 @@ fun HomeScreen(
                 title = { Text("HuertoHogar") },
                 colors = TopAppBarDefaults.topAppBarColors( /* ... */ ),
                 actions = {
-
+                    IconButton(onClick = { mainViewModel.navigateTo(NavigationEvent.NavigateTo(route = Screen.PostListApi)) }) {
+                        Icon(
+                            imageVector = Icons.Filled.Api, // Icono de "API"
+                            contentDescription = "Test API Posts"
+                        )
+                    }
                     IconButton(onClick = { mainViewModel.navigateTo(NavigationEvent.NavigateTo(route = Screen.Carrito)) }) {
                         BadgedBox(
                             badge = {

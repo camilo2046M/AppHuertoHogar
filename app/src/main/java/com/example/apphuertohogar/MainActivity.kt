@@ -37,6 +37,10 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.unit.IntOffset
 import com.example.apphuertohogar.ui.checkout.CheckoutScreen
+import com.example.apphuertohogar.ui.screens.PostScreen
+import com.example.apphuertohogar.viewmodel.PostViewModel
+
+//import androidx.navigation.compose.AnimatedNavHost
 
 
 class MainActivity : ComponentActivity(){
@@ -189,6 +193,16 @@ class MainActivity : ComponentActivity(){
                                             cartViewModel = cartViewModel
                                         )
                                     }
+                                    composable(
+                                        route = Screen.PostListApi.route,
+                                        enterTransition = { slideIn }, exitTransition = { slideOut },
+                                        popEnterTransition = { popSlideIn }, popExitTransition = { popSlideOut }
+                                    ) {
+                                        val postViewModel: PostViewModel = viewModel()
+                                        PostScreen(
+                                            mainViewModel = mainViewModel,
+                                            postViewModel = postViewModel
+                                        )
                                 }
                             }
                         }
@@ -196,6 +210,7 @@ class MainActivity : ComponentActivity(){
                 }
             }
         }
+    }
     }
 }
 
