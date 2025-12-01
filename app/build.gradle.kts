@@ -92,7 +92,7 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     testImplementation(libs.kotlinx.coroutines.test)
-
+    testImplementation("androidx.arch.core:core-testing:2.2.0")
     tasks.withType<Test>().configureEach{
         useJUnitPlatform()
     }
