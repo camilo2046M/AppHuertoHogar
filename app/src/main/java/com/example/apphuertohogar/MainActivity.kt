@@ -1,5 +1,6 @@
 package com.example.apphuertohogar
 
+import android.app.Application
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -36,9 +37,14 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.unit.IntOffset
+import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.apphuertohogar.ui.checkout.CheckoutScreen
 import com.example.apphuertohogar.ui.screens.PostScreen
 import com.example.apphuertohogar.viewmodel.PostViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import androidx.test.core.app.ApplicationProvider
 
 //import androidx.navigation.compose.AnimatedNavHost
 
@@ -49,12 +55,19 @@ class MainActivity : ComponentActivity(){
         setContent{
             AppHuertoHogarTheme {
                 val navController = rememberNavController()
-                val mainViewModel: MainViewModel = viewModel()
-                val cartViewModel: CartViewModel = viewModel()
+                val application = this@MainActivity.application
+                val viewModelFactory = viewModelFactory {
+                    initializer { MainViewModel(application) }
+                    initializer { CartViewModel(application) }
+                    initializer { PostViewModel() } // Este no necesita application por ahora
+                }
+                val mainViewModel: MainViewModel = viewModel(factory = viewModelFactory)
+                val cartViewModel: CartViewModel = viewModel(factory = viewModelFactory)
 
                 val authState by mainViewModel.authState.collectAsState()
 
-                LaunchedEffect(Unit) {
+
+                    LaunchedEffect(Unit) {
                     mainViewModel.navigationEvents.collectLatest { event ->
                         when (event) {
                             is NavigationEvent.NavigateTo -> {

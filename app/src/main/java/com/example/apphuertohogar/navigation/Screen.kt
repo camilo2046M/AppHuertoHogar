@@ -9,8 +9,14 @@ sealed class Screen(val route:String) {
     data object Carrito: Screen(route="carrito_screen")
     data object Checkout: Screen(route="checkout_screen")
     data object Perfil: Screen(route="perfil_screen")
-    data object DetalleProducto: Screen(route="detalle_producto/{productoId}")
+
+    // CORRECCIÓN: Restauramos la definición completa con la función 'conId'
+    data object DetalleProducto: Screen(route="detalle_producto/{productoId}") {
+        // Función helper para construir la ruta con un ID
+        fun conId(id: Int): String {
+            return "detalle_producto/$id"
+        }
+    }
 
     data object PostListApi: Screen(route="post_list_api")
-
 }
