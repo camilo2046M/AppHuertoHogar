@@ -13,11 +13,18 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.example.apphuertohogar.security.GestorPassword
+import android.util.Patterns
 
 
-class LoginViewModel(application: Application) : AndroidViewModel(application) {
+class LoginViewModel(
+    application: Application,
+    usuarioDao: UsuarioDao? = null,
+    private val emailValidator: (String) -> Boolean = { email ->
+        Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    }
+) : AndroidViewModel(application) {
 
-    private val usuarioDao: UsuarioDao = AppDatabase.getDatabase(application).usuarioDao()
+    private val usuarioDaoImpl: UsuarioDao = usuarioDao ?: AppDatabase.getDatabase(application).usuarioDao()
     private val _uiState = MutableStateFlow(LoginUiState())
 
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
@@ -45,7 +52,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         val pass = _uiState.value.pass
         var esValido = true
 
-        if (email.isBlank() || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+        if (email.isBlank() || !emailValidator(email)) {
             _uiState.update {
                 it.copy(emailError = "Email Inválido")
             }
@@ -66,7 +73,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         val email = _uiState.value.email
         val pass = _uiState.value.pass
 
-        if (email.isBlank() || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+        if (email.isBlank() || !emailValidator(email)) {
             _uiState.update { it.copy(emailError = "Correo inválido") }
             onFailure("Correo inválido")
             return
@@ -78,7 +85,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         }
 
         viewModelScope.launch {
-            val usuario = usuarioDao.getUserByEmail(email)
+            val usuario = usuarioDaoImpl.getUserByEmail(email)
             if (usuario == null) {
                 _uiState.update { it.copy(emailError = "Usuario no encontrado") }
                 onFailure("Usuario no encontrado")
