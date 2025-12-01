@@ -155,12 +155,8 @@ class LoginViewModelTest {
             onSuccess = { fail("No se esperaba éxito") },
             onFailure = { msg -> failureMessage = msg }
         )
-
         advanceUntilIdle()
-
         assertEquals("Usuario no encontrado", failureMessage)
         assertEquals("Usuario no encontrado", viewModel.uiState.value.emailError)
     }
-
-
 }
