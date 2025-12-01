@@ -14,7 +14,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.example.apphuertohogar.ui.formatPrice
 import com.example.apphuertohogar.viewmodel.CartViewModel
 import com.example.apphuertohogar.viewmodel.DetalleProductoViewModel
 import com.example.apphuertohogar.viewmodel.MainViewModel
@@ -77,12 +76,15 @@ fun DetalleProductoScreen(
                                 fontWeight = FontWeight.Bold
                             )
                             Spacer(Modifier.height(8.dp))
+
+                            // CAMBIO: Mostramos el precio directo (String)
                             Text(
-                                formatPrice(producto.precio),
+                                producto.precio,
                                 style = MaterialTheme.typography.headlineSmall,
                                 color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.SemiBold
                             )
+
                             Spacer(Modifier.height(16.dp))
                             Text(
                                 producto.descripcion,

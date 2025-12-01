@@ -20,6 +20,7 @@ import com.example.apphuertohogar.viewmodel.MainViewModel
 import kotlinx.coroutines.launch
 import com.example.apphuertohogar.model.AuthState
 import com.example.apphuertohogar.ui.formatPrice
+import com.example.apphuertohogar.ui.extractPriceValue // <-- IMPORTANTE
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,7 +35,10 @@ fun CheckoutScreen(
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    val totalPrice = cartItems.sumOf { it.producto.precio * it.cantidad }
+    // CÁLCULO DEL TOTAL (usando extractPriceValue)
+    val totalPrice = cartItems.sumOf {
+        extractPriceValue(it.producto.precio) * it.cantidad
+    }
 
     val userId = (authState as? AuthState.Authenticated)?.userId
 
@@ -80,31 +84,30 @@ fun CheckoutScreen(
             horizontalAlignment = Alignment.Start
         ) {
             when {
-                // Estado de carga inicial
                 checkoutUiState.isLoading || userId == null -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator()
                     }
                 }
                 cartItems.isEmpty() -> {
-                    Text("Tu carrito está vacío. No puedes finalizar la compra.", Modifier.padding(top = 32.dp))
+                    Text("Tu carrito está vacío.", Modifier.padding(top = 32.dp))
                     Spacer(modifier = Modifier.height(16.dp))
                     Button(onClick = { mainViewModel.navigateTo(NavigationEvent.NavigateTo(Screen.Home)) }) {
                         Text("Ir a la tienda")
                     }
                 }
                 else -> {
-
                     Text("Resumen del Pedido", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(8.dp))
 
                     cartItems.forEach { item ->
+                        val itemTotal = extractPriceValue(item.producto.precio) * item.cantidad
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text("${item.producto.nombre} (x${item.cantidad})", style = MaterialTheme.typography.bodyLarge)
-                            Text(formatPrice(item.producto.precio * item.cantidad), style = MaterialTheme.typography.bodyLarge)
+                            Text(formatPrice(itemTotal), style = MaterialTheme.typography.bodyLarge)
                         }
                     }
 
@@ -119,6 +122,7 @@ fun CheckoutScreen(
                     }
 
                     Spacer(Modifier.height(32.dp))
+
                     Text("Dirección de Envío", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(8.dp))
 
@@ -128,7 +132,6 @@ fun CheckoutScreen(
                     } else {
                         direccion
                     }
-
                     Text(direccionText, style = MaterialTheme.typography.bodyLarge)
 
                     if (direccion.isNullOrBlank()) {
@@ -164,15 +167,6 @@ fun CheckoutScreen(
                         } else {
                             Text("Confirmar y Pagar ${formatPrice(totalPrice)}")
                         }
-                    }
-
-                    if (direccion.isNullOrBlank()) {
-                        Spacer(Modifier.height(8.dp))
-                        Text(
-                            "🚨 Por favor, especifica una dirección en tu perfil para continuar.",
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall
-                        )
                     }
                 }
             }
