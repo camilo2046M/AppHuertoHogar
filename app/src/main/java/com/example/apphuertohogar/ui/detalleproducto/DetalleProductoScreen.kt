@@ -10,32 +10,51 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.example.apphuertohogar.model.Product // <--- USAR EL NUEVO (Product)
+import com.example.apphuertohogar.ui.buildImageUrl
+import com.example.apphuertohogar.ui.formatPrice
 import com.example.apphuertohogar.viewmodel.CartViewModel
-import com.example.apphuertohogar.viewmodel.DetalleProductoViewModel
 import com.example.apphuertohogar.viewmodel.MainViewModel
+import kotlinx.coroutines.launch
+import com.example.apphuertohogar.data.CartRepository // O inyectarlo en un ViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetalleProductoScreen(
     mainViewModel: MainViewModel,
     cartViewModel: CartViewModel,
-    detalleViewModel: DetalleProductoViewModel = viewModel(),
     productoId: Int
 ) {
-    val uiState by detalleViewModel.uiState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
+    // Estado local para el producto (lo ideal sería un DetalleViewModel, pero esto funciona rápido)
+    var product by remember { mutableStateOf<Product?>(null) }
+    var isLoading by remember { mutableStateOf(true) }
+
+    // Repositorio temporal para cargar el dato (mejor mover a ViewModel si puedes)
+    val repository = remember { CartRepository() }
 
     LaunchedEffect(productoId) {
-        detalleViewModel.cargarProducto(productoId)
+        isLoading = true
+        repository.getProductById(productoId)
+            .onSuccess {
+                product = it
+                isLoading = false
+            }
+            .onFailure {
+                isLoading = false
+                scope.launch { snackbarHostState.showSnackbar("Error al cargar producto") }
+            }
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text(uiState.producto?.nombre ?: "Detalle") },
+                title = { Text(product?.nombre ?: "Detalle") },
                 navigationIcon = {
                     IconButton(onClick = { mainViewModel.navigateBack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
@@ -44,66 +63,53 @@ fun DetalleProductoScreen(
             )
         }
     ) { innerPadding ->
-
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
-            when {
-                uiState.isLoading -> {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                }
-                uiState.producto != null -> {
-                    val producto = uiState.producto!!
-                    Column(
+        if (isLoading) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        } else {
+            product?.let { item ->
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                        .padding(16.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    AsyncImage(
+                        model = buildImageUrl(item.imagenUrl),
+                        contentDescription = item.nombre,
                         modifier = Modifier
-                            .fillMaxSize()
-                            .verticalScroll(rememberScrollState())
+                            .fillMaxWidth()
+                            .height(300.dp),
+                        contentScale = ContentScale.Crop
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(text = item.nombre, style = MaterialTheme.typography.headlineMedium)
+
+                    // PRECIO: Ya es Int, usamos formatPrice directo
+                    Text(
+                        text = formatPrice(item.precio),
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(text = item.descripcion, style = MaterialTheme.typography.bodyLarge)
+
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    Button(
+                        onClick = {
+                            // AQUÍ ESTABA EL ERROR: Ahora pasamos 'item' que es de tipo 'Product'
+                            cartViewModel.addToCart(item)
+                            scope.launch { snackbarHostState.showSnackbar("Agregado al carrito") }
+                        },
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        AsyncImage(
-                            model = producto.imagenUrl,
-                            contentDescription = producto.nombre,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(250.dp),
-                            contentScale = ContentScale.Crop
-                        )
-                        Column(Modifier.padding(16.dp)) {
-                            Text(
-                                producto.nombre,
-                                style = MaterialTheme.typography.headlineMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Spacer(Modifier.height(8.dp))
-
-                            // CAMBIO: Mostramos el precio directo (String)
-                            Text(
-                                producto.precio,
-                                style = MaterialTheme.typography.headlineSmall,
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.SemiBold
-                            )
-
-                            Spacer(Modifier.height(16.dp))
-                            Text(
-                                producto.descripcion,
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                            Spacer(Modifier.height(32.dp))
-                            Button(
-                                onClick = { cartViewModel.addToCart(producto) },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(50.dp)
-                            ) {
-                                Text("Agregar al Carrito")
-                            }
-                        }
+                        Text("Agregar al Carrito")
                     }
-                }
-                else -> {
-                    Text("Producto no encontrado", modifier = Modifier.align(Alignment.Center))
                 }
             }
         }

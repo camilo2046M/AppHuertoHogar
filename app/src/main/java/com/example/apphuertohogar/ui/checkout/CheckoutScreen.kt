@@ -12,15 +12,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.apphuertohogar.model.AuthState
 import com.example.apphuertohogar.navigation.NavigationEvent
 import com.example.apphuertohogar.navigation.Screen
+import com.example.apphuertohogar.ui.formatPrice
+// import com.example.apphuertohogar.ui.extractPriceValue // YA NO LO NECESITAS, BÓRRALO
 import com.example.apphuertohogar.viewmodel.CartViewModel
 import com.example.apphuertohogar.viewmodel.CheckoutViewModel
 import com.example.apphuertohogar.viewmodel.MainViewModel
 import kotlinx.coroutines.launch
-import com.example.apphuertohogar.model.AuthState
-import com.example.apphuertohogar.ui.formatPrice
-import com.example.apphuertohogar.ui.extractPriceValue // <-- IMPORTANTE
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.ui.platform.LocalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -28,37 +31,35 @@ fun CheckoutScreen(
     mainViewModel: MainViewModel,
     cartViewModel: CartViewModel,
     checkoutViewModel: CheckoutViewModel = viewModel()
+
 ) {
+    // Obtenemos los ítems del servidor (CartItemResponse)
     val cartItems by cartViewModel.cartItems.collectAsState()
     val authState by mainViewModel.authState.collectAsState()
     val checkoutUiState by checkoutViewModel.uiState.collectAsState()
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
 
-    // CÁLCULO DEL TOTAL (usando extractPriceValue)
-    val totalPrice = cartItems.sumOf {
-        extractPriceValue(it.producto.precio) * it.cantidad
+    LaunchedEffect(Unit) {
+        checkoutViewModel.loadUserData()
     }
+    // CORRECCIÓN 1: Cálculo del total usando la propiedad .total del modelo nuevo
+    // (O multiplicando product.precio * quantity directamente)
+    val totalPrice = cartItems.sumOf { it.total }
 
-    val userId = (authState as? AuthState.Authenticated)?.userId
+    // CORRECCIÓN 2: Ya no dependemos del ID manual, sino del estado de autenticación general
+    val isAuthenticated = authState is AuthState.Authenticated
 
-    LaunchedEffect(userId) {
-        if (userId != null) {
-            checkoutViewModel.loadUserData(userId)
-        }
-    }
 
-    LaunchedEffect(checkoutUiState.orderConfirmed) {
-        if (checkoutUiState.orderConfirmed) {
-            mainViewModel.navigateTo(
-                NavigationEvent.NavigateTo(
-                    route = Screen.Home,
-                    popUpToRoute = Screen.Carrito,
-                    inclusive = true,
-                    singleTop = true
-                )
-            )
-            scope.launch { snackbarHostState.showSnackbar("¡Pedido confirmado con éxito!") }
+    LaunchedEffect(checkoutUiState.paymentUrl) {
+        checkoutUiState.paymentUrl?.let { url ->
+            // Abrimos Chrome/Navegador con la URL de Stripe
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+            context.startActivity(intent)
+
+            // Opcional: Navegar al Home después de lanzar el navegador
+            mainViewModel.navigateTo(NavigationEvent.NavigateTo(Screen.Home))
         }
     }
 
@@ -84,7 +85,8 @@ fun CheckoutScreen(
             horizontalAlignment = Alignment.Start
         ) {
             when {
-                checkoutUiState.isLoading || userId == null -> {
+                // Mostrar carga si está cargando O si no está autenticado aún
+                checkoutUiState.isLoading || !isAuthenticated -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator()
                     }
@@ -101,13 +103,14 @@ fun CheckoutScreen(
                     Spacer(Modifier.height(8.dp))
 
                     cartItems.forEach { item ->
-                        val itemTotal = extractPriceValue(item.producto.precio) * item.cantidad
+                        // CORRECCIÓN 4: Usamos 'item.product' y 'item.quantity'
+                        // Y usamos el precio directo porque ya es Int
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text("${item.producto.nombre} (x${item.cantidad})", style = MaterialTheme.typography.bodyLarge)
-                            Text(formatPrice(itemTotal), style = MaterialTheme.typography.bodyLarge)
+                            Text("${item.product.nombre} (x${item.quantity})", style = MaterialTheme.typography.bodyLarge)
+                            Text(formatPrice(item.total), style = MaterialTheme.typography.bodyLarge)
                         }
                     }
 
@@ -126,6 +129,7 @@ fun CheckoutScreen(
                     Text("Dirección de Envío", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(8.dp))
 
+                    // CORRECCIÓN 5: Manejo seguro de nulos en la dirección
                     val direccion = checkoutUiState.usuario?.direccion
                     val direccionText = if (direccion.isNullOrBlank()) {
                         "No has especificado una dirección. Por favor, edita tu perfil."
@@ -149,21 +153,21 @@ fun CheckoutScreen(
 
                     Button(
                         onClick = {
-                            if (userId != null) {
-                                checkoutViewModel.confirmOrder(
-                                    userId = userId,
-                                    onSuccess = {},
-                                    onFailure = { errorMsg ->
-                                        scope.launch { snackbarHostState.showSnackbar(errorMsg) }
-                                    }
-                                )
-                            }
+                            // CORRECCIÓN: Llamada limpia.
+                            // El ViewModel se encarga de actualizar el estado (loading, error, paymentUrl).
+                            checkoutViewModel.confirmOrder(cartItems)
                         },
-                        modifier = Modifier.fillMaxWidth().height(50.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp),
+                        // Deshabilitamos si está procesando o si no hay dirección
                         enabled = !checkoutUiState.isProcessing && !direccion.isNullOrBlank()
                     ) {
                         if (checkoutUiState.isProcessing) {
-                            CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(24.dp))
+                            CircularProgressIndicator(
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.size(24.dp)
+                            )
                         } else {
                             Text("Confirmar y Pagar ${formatPrice(totalPrice)}")
                         }

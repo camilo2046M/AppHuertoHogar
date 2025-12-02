@@ -1,6 +1,8 @@
 package com.example.apphuertohogar.model
 
-data class HomeUiState (
-    val productos: List<Producto> = emptyList(),
-    val isLoading: Boolean = true
+data class HomeUiState(
+    // ANTES: val productos: List<Producto> = emptyList(),
+    // AHORA:
+    val productos: List<Product> = emptyList(),
+    val isLoading: Boolean = false
 )

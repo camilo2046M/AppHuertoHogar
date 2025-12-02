@@ -14,7 +14,7 @@ data class Producto(
     val descripcion: String,
 
     // CAMBIO: Cambiamos Double a String para aceptar "$2.500 / kg"
-    val precio: String,
+    val precio: Int,
 
     val categoria: String = "General",
 

@@ -8,8 +8,30 @@ import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
+import com.example.apphuertohogar.model.*
+import com.google.gson.annotations.SerializedName
 
+data class AddToCartRequest(
+    @SerializedName("productoId") val productoId: Int,
+    @SerializedName("cantidad") val cantidad: Int
+)
 interface ApiService {
+
+
+
+    @GET("api/carrito")
+    suspend fun getCarrito(): List<CartItemResponse> // Definimos esto abajo
+
+    @POST("api/carrito/agregar")
+    suspend fun addToCart(@Body request: AddToCartRequest): Any // 'Any' porque solo nos importa que sea 200 OK
+
+    @DELETE("api/carrito/{id}")
+    suspend fun removeFromCart(@Path("id") productoId: Int): Any
+    @POST("api/auth/login")
+    suspend fun login(@Body request: LoginRequest): AuthResponse
+
+    @POST("api/auth/register")
+    suspend fun register(@Body request: RegisterRequest): AuthResponse
 
     // --- SECCIÓN DE PRODUCTOS (Tu Backend Spring Boot) ---
 
@@ -17,8 +39,23 @@ interface ApiService {
      * Obtiene la lista de productos desde tu backend.
      * El backend devuelve un Page<Producto>, que mapeamos a ProductResponse.
      */
-    @GET("productos")
+    @GET("api/productos")
     suspend fun obtenerProductos(): ProductResponse
+
+    @GET("api/productos/{id}")
+    suspend fun obtenerProductoPorId(@Path("id") id: Int): Product
+
+    // ApiService.kt
+    @GET("api/auth/perfil")
+    suspend fun getPerfil(): UsuarioResponse
+
+    @PUT("api/auth/perfil")
+    suspend fun updatePerfil(@Body request: UserUpdateRequest): Any // O un response específico
+
+    // --- SECCIÓN DE PEDIDOS //
+
+    @POST("api/pedidos") // Ajusta la ruta según tu controlador
+    suspend fun crearPedido(@Body order: OrderRequest): OrderResponse
 
 
     // --- SECCIÓN DE POSTS (Placeholder - Mantener por ahora) ---

@@ -6,14 +6,15 @@ import androidx.lifecycle.viewModelScope
 import com.example.apphuertohogar.data.AppDatabase
 import com.example.apphuertohogar.data.UsuarioDao
 import androidx.lifecycle.ViewModel
+import com.example.apphuertohogar.data.AuthRepository
 import com.example.apphuertohogar.model.LoginUiState
 import  kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import com.example.apphuertohogar.security.GestorPassword
 import android.util.Patterns
+import com.example.apphuertohogar.utils.TokenStore
 
 
 class LoginViewModel(
@@ -24,7 +25,7 @@ class LoginViewModel(
     }
 ) : AndroidViewModel(application) {
 
-    private val usuarioDaoImpl: UsuarioDao = usuarioDao ?: AppDatabase.getDatabase(application).usuarioDao()
+    private val repository = AuthRepository()
     private val _uiState = MutableStateFlow(LoginUiState())
 
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
@@ -69,32 +70,30 @@ class LoginViewModel(
 
     }
 
-    fun iniciarSesion(onSuccess: (usuarioId: Int) -> Unit, onFailure: (String) -> Unit) {
+    fun iniciarSesion(onSuccess: () -> Unit, onFailure: (String) -> Unit) {
         val email = _uiState.value.email
         val pass = _uiState.value.pass
 
-        if (email.isBlank() || !emailValidator(email)) {
-            _uiState.update { it.copy(emailError = "Correo inválido") }
-            onFailure("Correo inválido")
-            return
-        }
-        if (pass.isBlank()) {
-            _uiState.update { it.copy(passError = "Contraseña no puede estar vacía") }
-            onFailure("Contraseña vacía")
-            return
-        }
+        // Validaciones básicas antes de enviar
+        if (email.isBlank()) { onFailure("Correo vacío"); return }
+        if (pass.isBlank()) { onFailure("Contraseña vacía"); return }
 
         viewModelScope.launch {
-            val usuario = usuarioDaoImpl.getUserByEmail(email)
-            if (usuario == null) {
-                _uiState.update { it.copy(emailError = "Usuario no encontrado") }
-                onFailure("Usuario no encontrado")
+            // Llamamos a la API. Pasamos la contraseña PLANA.
+            val result = repository.login(email, pass)
 
-            } else if (!GestorPassword.checkPassword(pass, usuario.passHash)) {
-                _uiState.update { it.copy(passError = "Contraseña incorrecta") }
-                onFailure("Contraseña incorrecta")
-            } else {
-                onSuccess(usuario.id)
+            result.onSuccess { response ->
+                viewModelScope.launch {
+                    // Guardamos en DataStore
+                    TokenStore.saveToken(response.token)
+                    // Navegamos
+                    onSuccess()
+                }
+
+            }.onFailure { error ->
+                // FALLO: El backend rechazó la contraseña o el usuario no existe (o error 403/401)
+                _uiState.update { it.copy(emailError = "Credenciales incorrectas o error de red") }
+                onFailure("Error: ${error.message}")
             }
         }
     }

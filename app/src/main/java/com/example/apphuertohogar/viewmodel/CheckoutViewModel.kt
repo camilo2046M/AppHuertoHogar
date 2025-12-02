@@ -1,12 +1,13 @@
 package com.example.apphuertohogar.viewmodel
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.apphuertohogar.data.AppDatabase
-import com.example.apphuertohogar.data.CarritoDao
-import com.example.apphuertohogar.data.UsuarioDao
 import com.example.apphuertohogar.model.CheckoutUiState
+import com.example.apphuertohogar.data.AuthRepository
+import com.example.apphuertohogar.data.CartRepository
+import com.example.apphuertohogar.model.CartItemResponse
+import com.example.apphuertohogar.model.OrderItemRequest
+import com.example.apphuertohogar.model.OrderRequest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,88 +15,76 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
- * Gestiona la lógica de la pantalla de finalización de compra.
- * Carga los datos del usuario (dirección) y procesa la orden.
- *
- * @param application Se usa para obtener el contexto para la base de datos.
+ * Gestiona la lógica del Checkout usando la API.
  */
-class CheckoutViewModel(application: Application) : AndroidViewModel(application) {
+class CheckoutViewModel : ViewModel() { // Ya no necesitamos 'Application'
 
-    private val usuarioDao: UsuarioDao = AppDatabase.getDatabase(application).usuarioDao()
-    private val carritoDao: CarritoDao = AppDatabase.getDatabase(application).carritoDao()
+    // 1. Inyectamos los repositorios de red
+    private val authRepository = AuthRepository()
+    private val cartRepository = CartRepository()
 
     private val _uiState = MutableStateFlow(CheckoutUiState())
-    /**
-     * El estado de la UI (datos de usuario, estado de carga/procesando) que [CheckoutScreen] observa.
-     */
     val uiState: StateFlow<CheckoutUiState> = _uiState.asStateFlow()
 
     /**
-     * Carga los detalles del usuario actual (especialmente la dirección)
-     * desde la base de datos.
-     *
-     * @param userId El ID del usuario que está haciendo el checkout.
+     * Carga los datos del usuario DESDE LA API.
+     * Ya no necesitamos pasar userId, el Token en el header identifica al usuario.
      */
-    fun loadUserData(userId: Int) {
+    fun loadUserData() {
         _uiState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
-            try {
-                val usuario = usuarioDao.getUserById(userId)
-                _uiState.update {
-                    it.copy(
-                        usuario = usuario,
-                        isLoading = false,
-                        error = if (usuario == null) "Usuario no encontrado." else null
-                    )
+            authRepository.getPerfil()
+                .onSuccess { usuario ->
+                    _uiState.update { it.copy(isLoading = false, usuario = usuario) }
                 }
-            } catch (e: Exception) {
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        error = "Error al cargar datos del usuario: ${e.message}"
-                    )
+                .onFailure { error ->
+                    // ¡AQUÍ ESTABA EL PROBLEMA! Si fallaba, isLoading se quedaba en true.
+                    // Ahora lo apagamos y mostramos el error.
+                    _uiState.update {
+                        it.copy(isLoading = false, error = "No se pudo cargar: ${error.message}")
+                    }
                 }
-            }
         }
     }
 
     /**
-     * Procesa la orden del usuario.
-     * En una app real, esto contactaría una pasarela de pagos (Stripe, etc.).
-     *
-     * Como simulación, simplemente limpia el carrito del usuario.
-     *
-     * @param userId El ID del usuario que confirma la orden.
-     * @param onSuccess Callback invocado si la "orden" es exitosa.
-     * @param onFailure Callback invocado si ocurre un error.
+     * Procesa la orden.
+     * Idealmente llamarías a un endpoint @POST /api/pedidos
      */
-    fun confirmOrder(
-        userId: Int,
-        onSuccess: () -> Unit,
-        onFailure: (String) -> Unit
-    ) {
+    fun confirmOrder(cartItems: List<CartItemResponse>) { // Recibimos los items del carrito
+        val currentUser = _uiState.value.usuario ?: return
+
         _uiState.update { it.copy(isProcessing = true, error = null) }
 
         viewModelScope.launch {
-            try {
-                // TODO: Integrar una pasarela de pago real aquí.
-                // Esta sección es solo una simulación.
-
-                // Simulación: Limpiar el carrito después de la "compra"
-                carritoDao.limpiarCarrito(userId)
-
-                _uiState.update {
-                    it.copy(
-                        isProcessing = false,
-                        orderConfirmed = true,
-                    )
-                }
-                onSuccess()
-
-            } catch (e: Exception) {
-                _uiState.update { it.copy(isProcessing = false, error = "Error al procesar el pedido.") }
-                onFailure("Error al procesar el pedido: ${e.message}")
+            // 1. Convertimos el carrito de Android al formato que pide el Backend (DTO)
+            val orderItems = cartItems.map {
+                OrderItemRequest(productoId = it.product.id, cantidad = it.quantity)
             }
+
+            val request = OrderRequest(
+                usuarioId = currentUser.id,
+                direccionEntrega = currentUser.direccion ?: "Sin dirección",
+                items = orderItems
+            )
+
+            // 2. Enviamos al servidor
+            cartRepository.createOrder(request) // Usamos el repositorio que actualizamos
+                .onSuccess { url ->
+                    // 3. ¡ÉXITO! Guardamos la URL para que la pantalla la vea
+                    _uiState.update {
+                        it.copy(
+                            isProcessing = false,
+                            paymentUrl = url, // <--- Guardamos la URL aquí
+                            orderConfirmed = true
+                        )
+                    }
+                }
+                .onFailure { error ->
+                    _uiState.update {
+                        it.copy(isProcessing = false, error = "Error: ${error.message}")
+                    }
+                }
         }
     }
 }

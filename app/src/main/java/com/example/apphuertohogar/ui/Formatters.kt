@@ -5,10 +5,11 @@ import java.util.Currency
 import java.util.Locale
 
 /**
- * Convierte un valor Double a un string con formato de moneda chilena.
- * Ejemplo: 25000.0 -> "$ 25.000"
+ * Convierte un valor numérico (Int, Double, Long) a formato de moneda chilena.
+ * Acepta 'Number' para evitar errores de tipo entre Int y Double.
+ * Ejemplo: 25000 -> "$ 25.000"
  */
-fun formatPrice(price: Double): String {
+fun formatPrice(price: Number): String {
     val chileLocale = Locale("es", "CL")
     val format = NumberFormat.getCurrencyInstance(chileLocale)
     format.currency = Currency.getInstance("CLP")
@@ -16,18 +17,23 @@ fun formatPrice(price: Double): String {
     return format.format(price)
 }
 
-/**
- * --- NUEVA FUNCIÓN ---
- * Toma el string del backend (ej. "$2.500 / kg" o "$ 1.000")
- * y extrae solo el valor numérico (ej. 2500.0).
- * Útil para calcular totales.
- */
-fun extractPriceValue(priceString: String): Double {
-    // 1. Reemplaza todo lo que NO sea un número (0-9) por vacío.
-    //    Esto elimina '$', '.', ' ', '/ kg', etc.
-    //    En Chile el punto es separador de miles, así que eliminarlo está bien para obtener el entero.
-    val cleanString = priceString.replace(Regex("[^0-9]"), "")
+// NOTA: He eliminado 'extractPriceValue' porque tu API ya devuelve
+// el precio como un número (Int), así que no hace falta limpiar texto.
 
-    // 2. Convierte a Double. Si falla, devuelve 0.0
-    return cleanString.toDoubleOrNull() ?: 0.0
+// Asegúrate de que esta URL sea la misma que usas en RetrofitClient
+// Si estás en AWS, pon la IP de AWS. Si es local, 10.0.2.2.
+const val BASE_IMAGE_URL = "http://52.44.157.216:9090"
+
+/**
+ * Convierte una ruta relativa en una URL completa.
+ */
+fun buildImageUrl(imagePath: String?): String {
+    if (imagePath.isNullOrBlank()) return "" // Manejo de nulos seguro
+
+    return if (imagePath.startsWith("http")) {
+        imagePath
+    } else {
+        val cleanPath = if (imagePath.startsWith("/")) imagePath else "/$imagePath"
+        "$BASE_IMAGE_URL$cleanPath"
+    }
 }

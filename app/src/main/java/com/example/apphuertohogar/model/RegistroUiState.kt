@@ -5,6 +5,7 @@ data class RegistroUiState (
     val email : String = "",
     val pass : String = "",
     val confirmarPass: String = "",
+    val isLoading: Boolean = false,
 
     val nombreError: String? = null,
     val emailError: String? = null,
