@@ -3,107 +3,83 @@ package com.example.apphuertohogar.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.apphuertohogar.data.AppDatabase
-import com.example.apphuertohogar.data.CarritoDao
-import com.example.apphuertohogar.data.UserPreferencesRepository
-import com.example.apphuertohogar.model.CartItem
-import com.example.apphuertohogar.model.CarritoItem
-import com.example.apphuertohogar.model.Producto
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.SharingStarted
+import com.example.apphuertohogar.model.CartItemResponse
+import com.example.apphuertohogar.model.Product // <--- CAMBIO: Usar Product (API), no Producto (Room)
+import com.example.apphuertohogar.data.CartRepository
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-/**
- * Gestión del estado del carrito.
- * Ha sido refactorizado para la Inyección de Dependencias.
- */
-class CartViewModel(
-    application: Application,
-    // [MODIFICACIÓN CLAVE] Parámetros opcionales para TESTING
-    carritoDao: CarritoDao? = null,
-    userPreferencesRepository: UserPreferencesRepository? = null
-) : AndroidViewModel(application) {
+class CartViewModel(application: Application) : AndroidViewModel(application) {
 
-    // Variables internas que contienen el mock o la implementación real.
-    private val carritoDaoImpl: CarritoDao
-    private val userPreferencesRepositoryImpl: UserPreferencesRepository
+    private val repository = CartRepository()
 
-    private val userIdFlow: StateFlow<Int?>
-    val cartItems: StateFlow<List<CartItem>>
+    // Usamos CartItemResponse que mapea la respuesta del JSON del Backend
+    private val _cartItems = MutableStateFlow<List<CartItemResponse>>(emptyList())
+    val cartItems: StateFlow<List<CartItemResponse>> = _cartItems.asStateFlow()
 
-    init {
-        // Inicialización: si se pasó un mock (en test), úsalo. Si no, usa el real.
-        carritoDaoImpl = carritoDao ?: AppDatabase.getDatabase(application).carritoDao()
-        userPreferencesRepositoryImpl = userPreferencesRepository ?: UserPreferencesRepository(application)
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading = _isLoading.asStateFlow()
 
-
-        // Usar las implementaciones
-        userIdFlow = userPreferencesRepositoryImpl.loggedInUserIdFlow
-            .stateIn(viewModelScope, SharingStarted.Eagerly, null)
-
-        // Usar las implementaciones
-        cartItems = userIdFlow.flatMapLatest { userId ->
-            if (userId == null) {
-                emptyFlow()
-            } else {
-                carritoDaoImpl.obtenerItemsParaUI(userId)
-            }
-        }.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList()
-        )
-    }
-
-    // --- ACCIONES DEL USUARIO (todas las llamadas usan el Impl) ---
-
-    fun addToCart(producto: Producto) {
+    /**
+     * Descarga el carrito actualizado desde el servidor (AWS).
+     * Esto asegura que la persistencia funcione entre sesiones.
+     */
+    fun fetchCart() {
         viewModelScope.launch {
-            val userId = userIdFlow.value ?: return@launch
-
-            val existingItem = carritoDaoImpl.obtenerItemCrudo(userId, producto.id)
-
-            val newQuantity: Int
-            if (existingItem != null) {
-                newQuantity = existingItem.cantidad + 1
-            } else {
-                newQuantity = 1
-            }
-
-            val newItem = CarritoItem(
-                usuarioId = userId,
-                productoId = producto.id,
-                cantidad = newQuantity
-            )
-
-            carritoDaoImpl.insertarOActualizar(newItem)
+            _isLoading.value = true
+            repository.getCart()
+                .onSuccess { items ->
+                    _cartItems.value = items
+                }
+                .onFailure {
+                    println("Error sincronizando carrito: ${it.message}")
+                }
+            _isLoading.value = false
         }
     }
 
-    fun removeFromCart(productoId: Int) {
+    /**
+     * Agrega un producto al carrito en el servidor.
+     */
+    fun addToCart(product: Product) { // <--- CAMBIO: Recibe Product
         viewModelScope.launch {
-            val userId = userIdFlow.value ?: return@launch
-            carritoDaoImpl.eliminarProductoDelCarrito(userId, productoId)
+            // Enviamos 1 unidad positiva
+            repository.addToCart(product.id, 1)
+                .onSuccess {
+                    fetchCart() // Recargamos para ver el cambio reflejado
+                }
+                .onFailure {
+                    // Manejar error (ej. Toast)
+                }
         }
     }
 
-    fun updateQuantity(productoId: Int, change: Int) {
+    /**
+     * Elimina un producto completamente del carrito.
+     */
+    fun removeFromCart(productId: Int) {
         viewModelScope.launch {
-            val userId = userIdFlow.value ?: return@launch
-            val existingItem = carritoDaoImpl.obtenerItemCrudo(userId, productoId) ?: return@launch
-
-            val newQuantity = existingItem.cantidad + change
-
-            if (newQuantity > 0) {
-                val updatedItem = existingItem.copy(cantidad = newQuantity)
-                carritoDaoImpl.insertarOActualizar(updatedItem)
-            } else {
-                carritoDaoImpl.eliminarProductoDelCarrito(userId, productoId)
-            }
+            repository.removeFromCart(productId)
+                .onSuccess { fetchCart() }
         }
+    }
+
+    /**
+     * Actualiza la cantidad.
+     * @param change Puede ser +1 (aumentar) o -1 (disminuir).
+     */
+    fun updateQuantity(productId: Int, change: Int) {
+        viewModelScope.launch {
+            // Tu Backend suma lo que le envíes.
+            // Si envías -1, el backend hará: cantidad_actual + (-1)
+            repository.addToCart(productId, change)
+                .onSuccess { fetchCart() }
+        }
+    }
+
+    fun calculateTotal(): Int {
+        return _cartItems.value.sumOf { it.total }
     }
 }

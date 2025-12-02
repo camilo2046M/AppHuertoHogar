@@ -10,17 +10,18 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.apphuertohogar.model.CartItem
+// IMPORTANTE: Usamos el modelo que viene de la API
+import com.example.apphuertohogar.model.CartItemResponse
 import com.example.apphuertohogar.navigation.NavigationEvent
 import com.example.apphuertohogar.navigation.Screen
-import com.example.apphuertohogar.ui.extractPriceValue // <-- IMPORTANTE
-import com.example.apphuertohogar.ui.formatPrice     // <-- IMPORTANTE
+import com.example.apphuertohogar.ui.formatPrice
 import com.example.apphuertohogar.viewmodel.CartViewModel
 import com.example.apphuertohogar.viewmodel.MainViewModel
 
@@ -32,13 +33,13 @@ fun CartScreen(
 ) {
     val cartItems by cartViewModel.cartItems.collectAsState()
 
-    // CALCULO DEL TOTAL:
-    // 1. Extraemos el valor numérico del string del precio.
-    // 2. Multiplicamos por cantidad.
-    // 3. Sumamos todo.
-    val totalPrice = cartItems.sumOf { item ->
-        extractPriceValue(item.producto.precio) * item.cantidad
+    LaunchedEffect(Unit) {
+        cartViewModel.fetchCart()
     }
+
+    // CÁLCULO DEL TOTAL (Simplificado)
+    // Ya no extraemos texto. Usamos la propiedad .total del modelo o multiplicamos enteros.
+    val totalPrice = cartItems.sumOf { it.total }
 
     Scaffold(
         topBar = {
@@ -87,7 +88,7 @@ fun CartScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        // Formateamos el número total calculado de vuelta a String bonito
+                        // formatPrice ahora recibe el entero directo
                         text = "Total: ${formatPrice(totalPrice)}",
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold
@@ -103,22 +104,20 @@ fun CartScreen(
 
 @Composable
 fun CartItemRow(
-    cartItem: CartItem,
+    cartItem: CartItemResponse, // <--- TIPO CORREGIDO
     cartViewModel: CartViewModel
 ) {
-    // Calculamos el precio total de esta fila (precio unitario * cantidad)
-    val numericPrice = extractPriceValue(cartItem.producto.precio)
-    val rowTotal = numericPrice * cartItem.cantidad
-
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(cartItem.producto.nombre, style = MaterialTheme.typography.titleMedium)
-            // Mostramos el precio calculado formateado
+            // CAMBIO: .product (inglés)
+            Text(cartItem.product.nombre, style = MaterialTheme.typography.titleMedium)
+
+            // Precio total de la fila ya calculado y formateado
             Text(
-                formatPrice(rowTotal),
+                formatPrice(cartItem.total),
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold
             )
@@ -126,20 +125,21 @@ fun CartItemRow(
 
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(
-                onClick = { cartViewModel.updateQuantity(cartItem.producto.id, -1) },
-                enabled = cartItem.cantidad > 1
+                // CAMBIO: .product.id
+                onClick = { cartViewModel.updateQuantity(cartItem.product.id, -1) }
             ) {
                 Icon(Icons.Default.Remove, contentDescription = "Disminuir")
             }
 
-            Text("${cartItem.cantidad}", modifier = Modifier.padding(horizontal = 8.dp))
+            // CAMBIO: .quantity (inglés)
+            Text("${cartItem.quantity}", modifier = Modifier.padding(horizontal = 8.dp))
 
-            IconButton(onClick = { cartViewModel.updateQuantity(cartItem.producto.id, 1) }) {
+            IconButton(onClick = { cartViewModel.updateQuantity(cartItem.product.id, 1) }) {
                 Icon(Icons.Default.Add, contentDescription = "Aumentar")
             }
         }
 
-        IconButton(onClick = { cartViewModel.removeFromCart(cartItem.producto.id) }) {
+        IconButton(onClick = { cartViewModel.removeFromCart(cartItem.product.id) }) {
             Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = MaterialTheme.colorScheme.error)
         }
     }

@@ -1,6 +1,11 @@
 package com.example.apphuertohogar.model
 
+import com.example.apphuertohogar.model.Product
+
 data class DetalleProductoUiState(
-    val producto: Producto? = null,
-    val isLoading: Boolean = true
+    // ANTES: val producto: Producto? = null,
+    // AHORA:
+    val producto: Product? = null,
+    val isLoading: Boolean = false,
+    val error: String? = null
 )

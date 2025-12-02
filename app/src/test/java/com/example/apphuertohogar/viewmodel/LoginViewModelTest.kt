@@ -4,7 +4,6 @@ import android.app.Application
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.example.apphuertohogar.data.UsuarioDao
 import com.example.apphuertohogar.model.Usuario
-import com.example.apphuertohogar.security.GestorPassword
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.coVerify

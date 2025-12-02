@@ -38,6 +38,7 @@ import com.example.apphuertohogar.model.AuthState
 fun ProfileScreen(
     mainViewModel: MainViewModel,
     perfilViewModel: PerfilViewModel = viewModel()
+
 ) {
     val authState by mainViewModel.authState.collectAsState()
     val context = LocalContext.current
@@ -48,6 +49,9 @@ fun ProfileScreen(
     var showDialog by remember { mutableStateOf(false) }
     var uriForCameraCapture: Uri? by remember { mutableStateOf(null) }
 
+    LaunchedEffect(Unit) { // 'Unit' significa: Ejecutar cada vez que se muestra esta pantalla
+        perfilViewModel.loadUserProfile()
+    }
 
     val takePictureLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
@@ -113,10 +117,10 @@ fun ProfileScreen(
     LaunchedEffect(authState) {
         when (val state = authState) {
             is AuthState.Authenticated -> {
-                perfilViewModel.loadUserProfile(state.userId)
+                perfilViewModel.loadUserProfile()
             }
             is AuthState.Unauthenticated -> {
-                perfilViewModel.loadUserProfile(null)
+                perfilViewModel
             }
             is AuthState.Loading -> {
             }
@@ -186,8 +190,16 @@ fun ProfileScreen(
                             .size(120.dp)
                             .clip(CircleShape)
                     }
+                    val modelToShow = if (imageUri != null) {
+                        imageUri // Muestra lo que hay en memoria (preview)
+                    } else {
+                        // Si viene del backend, puede ser una ruta de archivo
+                        uiState.usuario?.imagenUrl?.let { url ->
+                            if (url.startsWith("/")) File(url) else url
+                        } ?: R.drawable.iconapphuertohogar
+                    }
                     AsyncImage(
-                        model = imageUri ?: R.drawable.iconapphuertohogar,
+                        model = modelToShow,
                         contentDescription = "Profile Picture",
                         modifier = imageModifier,
                         contentScale = ContentScale.Crop,
